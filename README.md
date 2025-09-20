@@ -200,4 +200,4 @@ For questions or support, please contact the development team | 如有问题或�
 
 ---
 
-Built with ❤️ for the Chinese Comedy Society | 为中国喜剧社用爱构建
+Built with ❤️ for the Chinese Comedy Society | 为华人喜剧协会用爱构建
