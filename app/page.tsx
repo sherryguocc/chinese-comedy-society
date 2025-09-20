@@ -40,13 +40,13 @@ export default function HomePage() {
         <div className="hero-content text-center text-primary-content">
           <div className="max-w-md">
             <h1 className="mb-5 text-5xl font-bold">
-              中国喜剧社
+              华人喜剧协会
             </h1>
             <h2 className="mb-5 text-3xl font-bold">
               Chinese Comedy Society
             </h2>
             <p className="mb-5">
-              欢迎来到我们的双语喜剧社区！分享笑声，传播快乐。
+              欢迎来到我们的华人喜剧协会！分享笑声，传播快乐。
               <br />
               Welcome to our bilingual comedy community! Share laughter, spread joy.
             </p>

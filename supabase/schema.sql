@@ -1,5 +1,5 @@
 -- Chinese Comedy Society Database Schema
--- 中国喜剧社数据库架构
+-- 华人喜剧协会数据库架构
 
 -- Enable Row Level Security
 -- 启用行级安全

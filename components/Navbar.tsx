@@ -24,7 +24,7 @@ export default function Navbar() {
           </ul>
         </div>
         <Link href="/" className="btn btn-ghost text-xl">
-          中国喜剧社 Chinese Comedy Society
+          华人喜剧协会 Chinese Comedy Society
         </Link>
       </div>
       

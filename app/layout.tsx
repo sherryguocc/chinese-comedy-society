@@ -7,7 +7,7 @@ import Navbar from '@/components/Navbar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: '中国喜剧社 Chinese Comedy Society',
+  title: '华人喜剧协会 Chinese Comedy Society',
   description: 'A bilingual community for comedy enthusiasts | 喜剧爱好者的双语社区',
 }
 
@@ -26,7 +26,7 @@ export default function RootLayout({
           </main>
           <footer className="footer footer-center p-10 bg-base-200 text-base-content rounded">
             <div className="grid grid-flow-col gap-4">
-              <p>© 2024 中国喜剧社 Chinese Comedy Society. All rights reserved.</p>
+              <p>© 2024 华人喜剧协会 Chinese Comedy Society. All rights reserved.</p>
             </div>
           </footer>
         </AuthProvider>
