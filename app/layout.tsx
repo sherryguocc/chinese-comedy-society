@@ -26,7 +26,7 @@ export default function RootLayout({
           </main>
           <footer className="footer footer-center p-10 bg-base-200 text-base-content rounded">
             <div className="grid grid-flow-col gap-4">
-              <p>© 2024 华人喜剧协会 Chinese Comedy Society. All rights reserved.</p>
+              <p>© 2025 华人喜剧协会 Chinese Comedy Society. All rights reserved.</p>
             </div>
           </footer>
         </AuthProvider>

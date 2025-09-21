@@ -7,10 +7,10 @@ export default function Navbar() {
   const { user, profile, signOut } = useAuth()
 
   return (
-    <div className="navbar bg-base-100 shadow-lg">
+    <div className="navbar bg-gradient-to-r from-black to-orange-900 shadow-lg">
       <div className="navbar-start">
         <div className="dropdown">
-          <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
+          <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden text-white border-0">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
             </svg>
@@ -23,26 +23,33 @@ export default function Navbar() {
             {user && <li><Link href="/profile">个人 Profile</Link></li>}
           </ul>
         </div>
-        <Link href="/" className="btn btn-ghost text-xl">
-          华人喜剧协会 Chinese Comedy Society
+        <Link href="/" className="flex items-center space-x-3 px-2">
+          <img 
+            src="/logo.png" 
+            alt="华人喜剧协会 Chinese Comedy Society" 
+            className="logo-circle"
+          />
+          <span className="text-white text-lg font-bold hidden sm:block">
+            华人喜剧协会
+          </span>
         </Link>
       </div>
       
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
-          <li><Link href="/">首页 Home</Link></li>
-          <li><Link href="/posts">文章 Posts</Link></li>
-          <li><Link href="/library">资料库 Library</Link></li>
-          <li><Link href="/events">活动 Events</Link></li>
-          {user && <li><Link href="/profile">个人 Profile</Link></li>}
+          <li><Link href="/" className="text-white hover:text-orange-300 border-0">首页 Home</Link></li>
+          <li><Link href="/posts" className="text-white hover:text-orange-300 border-0">文章 Posts</Link></li>
+          <li><Link href="/library" className="text-white hover:text-orange-300 border-0">资料库 Library</Link></li>
+          <li><Link href="/events" className="text-white hover:text-orange-300 border-0">活动 Events</Link></li>
+          {user && <li><Link href="/profile" className="text-white hover:text-orange-300 border-0">个人 Profile</Link></li>}
         </ul>
       </div>
       
       <div className="navbar-end">
         {user ? (
           <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full bg-primary text-primary-content flex items-center justify-center">
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar border-0">
+              <div className="w-10 rounded-full bg-orange-500 text-white flex items-center justify-center">
                 {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
               </div>
             </div>
@@ -59,10 +66,10 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Link href="/auth/login" className="btn btn-ghost">
+            <Link href="/auth/login" className="btn btn-ghost text-white hover:text-orange-300 border-0">
               登录 Login
             </Link>
-            <Link href="/auth/register" className="btn btn-primary">
+            <Link href="/auth/register" className="btn bg-orange-500 hover:bg-orange-600 text-white border-0">
               注册 Register
             </Link>
           </div>

@@ -36,8 +36,8 @@ export default function HomePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Hero Section */}
-      <div className="hero min-h-96 bg-gradient-to-r from-primary to-secondary rounded-lg mb-12">
-        <div className="hero-content text-center text-primary-content">
+      <div className="hero min-h-96 bg-gradient-to-r from-orange-500 to-black rounded-lg mb-12">
+        <div className="hero-content text-center text-white">
           <div className="max-w-md">
             <h1 className="mb-5 text-5xl font-bold">
               华人喜剧协会
@@ -50,7 +50,7 @@ export default function HomePage() {
               <br />
               Welcome to our bilingual comedy community! Share laughter, spread joy.
             </p>
-            <Link href="/posts" className="btn btn-accent">
+            <Link href="/posts" className="btn primary-orange">
               探索文章 Explore Posts
             </Link>
           </div>
@@ -112,31 +112,31 @@ export default function HomePage() {
 
       {/* Quick Links */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card bg-gradient-to-br from-primary to-primary-focus text-primary-content">
+        <div className="card bg-gradient-to-br from-orange-500 to-orange-700 text-white">
           <div className="card-body text-center">
             <h3 className="card-title justify-center">资料库 Library</h3>
             <p>访问独家PDF资源 Access exclusive PDF resources</p>
-            <Link href="/library" className="btn btn-accent">
+            <Link href="/library" className="btn btn-black bg-black hover:bg-gray-800 text-white">
               进入 Enter
             </Link>
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-secondary to-secondary-focus text-secondary-content">
+        <div className="card bg-gradient-to-br from-black to-gray-800 text-white">
           <div className="card-body text-center">
             <h3 className="card-title justify-center">活动 Events</h3>
             <p>查看即将举行的活动 View upcoming events</p>
-            <Link href="/events" className="btn btn-accent">
+            <Link href="/events" className="btn primary-orange">
               查看 View
             </Link>
           </div>
         </div>
 
-        <div className="card bg-gradient-to-br from-accent to-accent-focus text-accent-content">
+        <div className="card bg-gradient-to-br from-orange-600 to-orange-800 text-white">
           <div className="card-body text-center">
             <h3 className="card-title justify-center">加入我们 Join Us</h3>
             <p>成为会员解锁更多功能 Become a member to unlock more features</p>
-            <Link href="/auth/register" className="btn btn-primary">
+            <Link href="/auth/register" className="btn bg-black hover:bg-gray-800 text-white">
               注册 Register
             </Link>
           </div>
