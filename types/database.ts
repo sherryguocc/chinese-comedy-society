@@ -16,15 +16,16 @@ export interface Post {
   id: string
   title: string
   content: string
+  excerpt?: string // 文章摘要
   author_id: string
   author?: Profile
-  created_at: string
-  updated_at: string
   published: boolean
+  created_at: string
+  updated_at?: string
 }
 
 export interface File {
-  id: string
+  id?: string
   title: string
   description?: string
   path: string

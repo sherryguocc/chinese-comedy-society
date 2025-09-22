@@ -146,7 +146,6 @@ export default function LibraryPage() {
                   <div className="text-xs text-base-content/60 space-y-1">
                     <div>文件名: {file.file_name}</div>
                     <div>大小: {formatFileSize(file.file_size)}</div>
-                    <div>类型: {file.file_type.split('/')[1]?.toUpperCase()}</div>
                     <div>上传时间: {new Date(file.created_at).toLocaleDateString()}</div>
                   </div>
 
