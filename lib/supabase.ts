@@ -13,7 +13,6 @@ if (!supabaseAnonKey) {
 }
 
 // 添加调试信息
-console.log('Supabase URL:', supabaseUrl)
 console.log('Supabase Anon Key exists:', !!supabaseAnonKey)
 
 // Regular client for client-side operations (respects RLS)

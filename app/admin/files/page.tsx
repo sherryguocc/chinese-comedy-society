@@ -163,7 +163,6 @@ export default function FileManagementPage() {
       console.log('文件扩展名:', fileExt)
 
       // 检查Supabase客户端状态
-      console.log('Supabase URL:', supabase.supabaseUrl)
       console.log('检查认证状态...')
       
       const { data: { user }, error: userError } = await supabase.auth.getUser()
