@@ -38,4 +38,21 @@
   .btn-primary {
     @apply bg-orange-500 hover:bg-orange-600 text-white border-0;
   }
+  
+  /* 用户头像样式 */
+  .user-avatar {
+    @apply rounded-full bg-orange-500 text-white flex items-center justify-center font-bold;
+  }
+  
+  .user-avatar-sm {
+    @apply w-8 h-8 text-sm;
+  }
+  
+  .user-avatar-md {
+    @apply w-10 h-10 text-lg;
+  }
+  
+  .user-avatar-lg {
+    @apply w-20 h-20 text-3xl;
+  }
 }

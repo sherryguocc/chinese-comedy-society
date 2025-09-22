@@ -1,77 +1,96 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { signIn, user } = useAuth()
   const router = useRouter()
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  })
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // 如果用户已登录，重定向到首页
+  useEffect(() => {
+    if (user) {
+      router.push('/')
+    }
+  }, [user, router])
+
+  // 检查表单是否有效
+  const isFormValid = () => {
+    return formData.email.trim() !== '' && formData.password.trim() !== ''
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
+    if (!isFormValid()) {
+      setError('请填写邮箱和密码 Please fill in email and password')
+      return
+    }
+
+    setIsSubmitting(true)
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) throw error
-
+      await signIn(formData.email, formData.password)
       router.push('/')
     } catch (error: any) {
-      setError(error.message)
+      console.error('登录失败 Login failed:', error)
+      setError(error.message || '登录失败 Login failed')
     } finally {
-      setLoading(false)
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <div className="card w-full max-w-sm shadow-2xl bg-base-100">
+    <div className="container mx-auto px-4 py-8 max-w-md">
+      <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title justify-center text-2xl mb-6">
+          <h1 className="card-title justify-center text-2xl mb-6">
             登录 Login
-          </h2>
-          
+          </h1>
+
           {error && (
             <div className="alert alert-error mb-4">
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">邮箱 Email</span>
+                <span className="label-text">邮箱 Email *</span>
               </label>
               <input
                 type="email"
-                placeholder="your@email.com"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="input input-bordered"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="请输入邮箱 Enter your email"
                 required
               />
             </div>
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text">密码 Password</span>
+                <span className="label-text">密码 Password *</span>
               </label>
               <input
                 type="password"
-                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 className="input input-bordered"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="请输入密码 Enter password"
                 required
               />
             </div>
@@ -79,10 +98,17 @@ export default function LoginPage() {
             <div className="form-control mt-6">
               <button
                 type="submit"
-                className={`btn btn-primary ${loading ? 'loading' : ''}`}
-                disabled={loading}
+                disabled={!isFormValid() || isSubmitting}
+                className="btn primary-orange w-full"
               >
-                {loading ? '登录中 Signing in...' : '登录 Sign In'}
+                {isSubmitting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    登录中...
+                  </>
+                ) : (
+                  '登录 Login'
+                )}
               </button>
             </div>
           </form>

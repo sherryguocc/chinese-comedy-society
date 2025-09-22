@@ -12,11 +12,21 @@ if (!supabaseAnonKey) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
 }
 
+// 添加调试信息
+console.log('Supabase URL:', supabaseUrl)
+console.log('Supabase Anon Key exists:', !!supabaseAnonKey)
+
 // Regular client for client-side operations (respects RLS)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+})
 
 // Admin client for server-side operations only (bypasses RLS)
 export const supabaseAdmin = createClient(
   supabaseUrl,
-  supabaseServiceRoleKey || supabaseAnonKey // Fallback to anon key if service role key is not available
+  supabaseServiceRoleKey || supabaseAnonKey
 )

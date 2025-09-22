@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Post } from '@/types/database'
+import { AdminOnly } from '@/components/PermissionGuard'
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     fetchPosts()
@@ -22,91 +22,63 @@ export default function PostsPage() {
           *,
           author:profiles(*)
         `)
+        .eq('published', true)
         .order('created_at', { ascending: false })
 
       if (error) throw error
       setPosts(data || [])
     } catch (error) {
-      console.error('Error fetching posts:', error)
+      console.error('获取文章失败 Error fetching posts:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.content.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold">
           文章列表 Posts
         </h1>
-      </div>
-
-      {/* Search */}
-      <div className="mb-8">
-        <div className="form-control w-full max-w-xs">
-          <label className="label">
-            <span className="label-text">搜索文章 Search Posts</span>
-          </label>
-          <input
-            type="text"
-            placeholder="输入关键词 Enter keywords..."
-            className="input input-bordered w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        <AdminOnly>
+          <Link href="/admin/posts/create" className="btn primary-orange">
+            发布文章 Create Post
+          </Link>
+        </AdminOnly>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-6">
-          {[...Array(5)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
             <div key={i} className="card bg-base-100 shadow-xl">
               <div className="card-body">
-                <div className="skeleton h-6 w-64"></div>
-                <div className="skeleton h-20 w-full"></div>
-                <div className="skeleton h-4 w-32"></div>
+                <div className="skeleton h-4 w-28"></div>
+                <div className="skeleton h-32 w-full"></div>
+                <div className="skeleton h-4 w-full"></div>
               </div>
             </div>
           ))}
         </div>
-      ) : filteredPosts.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6">
-          {filteredPosts.map((post) => (
+      ) : posts.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {posts.map((post) => (
             <div key={post.id} className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
               <div className="card-body">
-                <h2 className="card-title text-2xl mb-4">
+                <h2 className="card-title text-lg">
                   <Link href={`/posts/${post.id}`} className="link link-hover">
                     {post.title}
                   </Link>
                 </h2>
-                <p className="text-base-content/80 mb-4 line-clamp-3">
-                  {post.content.substring(0, 200)}...
+                <p className="text-base-content/70 line-clamp-3">
+                  {post.content.substring(0, 150)}...
                 </p>
-                <div className="card-actions justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="avatar placeholder">
-                      <div className="bg-primary text-primary-content rounded-full w-8">
-                        <span className="text-xs">
-                          {post.author?.full_name?.[0] || post.author?.email?.[0] || 'U'}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {post.author?.full_name || post.author?.email}
-                      </p>
-                      <p className="text-xs text-base-content/60">
-                        {new Date(post.created_at).toLocaleDateString('zh-CN')}
-                      </p>
-                    </div>
+                <div className="card-actions justify-between items-center mt-4">
+                  <div className="text-sm text-base-content/60">
+                    <div>作者: {post.author?.full_name || post.author?.email}</div>
+                    <div>发布: {new Date(post.created_at).toLocaleDateString()}</div>
                   </div>
-                  <Link href={`/posts/${post.id}`} className="btn btn-primary">
-                    阅读全文 Read Full
+                  <Link href={`/posts/${post.id}`} className="btn btn-primary btn-sm">
+                    阅读全文 Read More
                   </Link>
                 </div>
               </div>
@@ -115,21 +87,14 @@ export default function PostsPage() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">📝</div>
-          <h3 className="text-2xl font-bold mb-2">
-            {searchTerm ? '未找到相关文章' : '暂无文章'}
-          </h3>
-          <p className="text-base-content/60">
-            {searchTerm ? 'No posts found matching your search' : 'No posts available yet'}
+          <h2 className="text-2xl font-bold text-base-content/60 mb-4">
+            暂无文章 No Posts Yet
+          </h2>
+          <p className="text-base-content/50">
+            还没有发布任何文章，请稍后再来查看。
+            <br />
+            No posts have been published yet. Please check back later.
           </p>
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="btn btn-outline mt-4"
-            >
-              清除搜索 Clear Search
-            </button>
-          )}
         </div>
       )}
     </div>

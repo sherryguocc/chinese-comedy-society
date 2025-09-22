@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { AdminOnly } from '@/components/PermissionGuard'
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuth()
@@ -21,6 +22,9 @@ export default function Navbar() {
             <li><Link href="/library">资料库 Library</Link></li>
             <li><Link href="/events">活动 Events</Link></li>
             {user && <li><Link href="/profile">个人 Profile</Link></li>}
+            <AdminOnly>
+              <li><Link href="/admin/dashboard">管理后台 Admin</Link></li>
+            </AdminOnly>
           </ul>
         </div>
         <Link href="/" className="flex items-center space-x-3 px-2">
@@ -42,6 +46,9 @@ export default function Navbar() {
           <li><Link href="/library" className="text-white hover:text-orange-300 border-0">资料库 Library</Link></li>
           <li><Link href="/events" className="text-white hover:text-orange-300 border-0">活动 Events</Link></li>
           {user && <li><Link href="/profile" className="text-white hover:text-orange-300 border-0">个人 Profile</Link></li>}
+          <AdminOnly>
+            <li><Link href="/admin/dashboard" className="text-white hover:text-orange-300 border-0">管理后台 Admin</Link></li>
+          </AdminOnly>
         </ul>
       </div>
       
@@ -50,13 +57,18 @@ export default function Navbar() {
           <div className="dropdown dropdown-end">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar border-0">
               <div className="w-10 rounded-full bg-orange-500 text-white flex items-center justify-center">
-                {profile?.full_name?.[0] || profile?.email?.[0] || 'U'}
+                {profile?.full_name?.[0] || profile?.username?.[0] || profile?.email?.[0] || 'U'}
               </div>
             </div>
             <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
               <li>
                 <span className="text-sm">
-                  {profile?.full_name || profile?.email}
+                  <div className="font-semibold">
+                    {profile?.full_name || profile?.username || profile?.email?.split('@')[0]}
+                  </div>
+                  {profile?.username && profile?.full_name && (
+                    <div className="text-xs text-gray-500">@{profile.username}</div>
+                  )}
                   <div className="badge badge-sm badge-outline">{profile?.role}</div>
                 </span>
               </li>

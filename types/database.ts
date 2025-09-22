@@ -1,10 +1,15 @@
+// 严格的小写角色类型
+export type UserRole = 'guest' | 'member' | 'admin'
+
 export interface Profile {
   id: string
   email: string
+  username?: string
   full_name?: string
-  role: 'guest' | 'member' | 'admin'
+  phone_number?: string
+  role: UserRole // 必须是小写的 'guest', 'member', 或 'admin'
   created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
 export interface Post {
@@ -12,32 +17,35 @@ export interface Post {
   title: string
   content: string
   author_id: string
+  author?: Profile
   created_at: string
   updated_at: string
-  author?: Profile
+  published: boolean
 }
 
 export interface File {
   id: string
-  title: string
-  description?: string
+  name: string
   file_path: string
-  file_size?: number
-  uploaded_by: string
-  created_at: string
+  file_type: string
+  file_size: number
+  uploader_id: string
   uploader?: Profile
+  created_at: string
+  member_only: boolean
 }
 
 export interface Event {
   id: string
   title: string
-  description?: string
-  start_date: string
-  end_date: string
+  description: string
+  event_date: string
   location?: string
-  created_by: string
+  author_id: string
+  author?: Profile
   created_at: string
-  creator?: Profile
+  updated_at: string
+  published: boolean
 }
 
 export interface Comment {
@@ -45,6 +53,6 @@ export interface Comment {
   content: string
   post_id: string
   author_id: string
-  created_at: string
   author?: Profile
+  created_at: string
 }
