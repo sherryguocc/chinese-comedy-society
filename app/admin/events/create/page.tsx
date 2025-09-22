@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { AdminOnly } from '@/components/PermissionGuard'
+import AdminLayout from '@/components/AdminLayout'
 
 export default function CreateEvent() {
   const { profile } = useAuth()
@@ -57,120 +57,112 @@ export default function CreateEvent() {
   }
 
   return (
-    <AdminOnly>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">创建活动 Create Event</h1>
-          <button 
-            onClick={() => router.back()} 
-            className="btn btn-outline"
-          >
-            返回 Back
-          </button>
-        </div>
+    <AdminLayout 
+      title="创建活动 Create Event" 
+      showBackButton={true}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            {/* 活动标题 */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg font-semibold">活动标题 Event Title</span>
+              </label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="input input-bordered w-full"
+                placeholder="请输入活动标题 Enter event title..."
+                required
+              />
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              {/* 活动标题 */}
+            {/* 活动描述 */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg font-semibold">活动描述 Event Description</span>
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="textarea textarea-bordered w-full h-32"
+                placeholder="请输入活动描述 Enter event description..."
+                required
+              />
+            </div>
+
+            {/* 活动日期和地点 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-lg font-semibold">活动标题 Event Title</span>
+                  <span className="label-text text-lg font-semibold">活动日期 Event Date</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.event_date}
+                  onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
+                  className="input input-bordered w-full"
+                  required
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text text-lg font-semibold">活动地点 Location</span>
                 </label>
                 <input
                   type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   className="input input-bordered w-full"
-                  placeholder="请输入活动标题 Enter event title..."
-                  required
+                  placeholder="请输入活动地点 Enter location..."
                 />
-              </div>
-
-              {/* 活动描述 */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text text-lg font-semibold">活动描述 Event Description</span>
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="textarea textarea-bordered w-full h-32"
-                  placeholder="请输入活动描述 Enter event description..."
-                  required
-                />
-              </div>
-
-              {/* 活动日期和地点 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text text-lg font-semibold">活动日期 Event Date</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={formData.event_date}
-                    onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                    className="input input-bordered w-full"
-                    required
-                  />
-                </div>
-
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text text-lg font-semibold">活动地点 Location</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="input input-bordered w-full"
-                    placeholder="请输入活动地点 Enter location..."
-                  />
-                </div>
-              </div>
-
-              {/* 发布状态 */}
-              <div className="form-control">
-                <label className="label cursor-pointer justify-start space-x-4">
-                  <input
-                    type="checkbox"
-                    checked={formData.published}
-                    onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-                    className="checkbox checkbox-primary"
-                  />
-                  <span className="label-text">立即发布 Publish immediately</span>
-                </label>
-              </div>
-
-              {/* 提交按钮 */}
-              <div className="card-actions justify-end mt-6">
-                <button
-                  type="button"
-                  onClick={() => router.back()}
-                  className="btn btn-outline"
-                >
-                  取消 Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn primary-orange"
-                >
-                  {loading ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm"></span>
-                      创建中...
-                    </>
-                  ) : (
-                    '创建活动 Create Event'
-                  )}
-                </button>
               </div>
             </div>
+
+            {/* 发布状态 */}
+            <div className="form-control">
+              <label className="label cursor-pointer justify-start space-x-4">
+                <input
+                  type="checkbox"
+                  checked={formData.published}
+                  onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                  className="checkbox checkbox-primary"
+                />
+                <span className="label-text">立即发布 Publish immediately</span>
+              </label>
+            </div>
+
+            {/* 提交按钮 */}
+            <div className="card-actions justify-end mt-6">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="btn btn-outline"
+              >
+                取消 Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn primary-orange"
+              >
+                {loading ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    创建中...
+                  </>
+                ) : (
+                  '创建活动 Create Event'
+                )}
+              </button>
+            </div>
           </div>
-        </form>
-      </div>
-    </AdminOnly>
+        </div>
+      </form>
+    </AdminLayout>
   )
 }
+

@@ -25,14 +25,16 @@ export interface Post {
 
 export interface File {
   id: string
-  name: string
-  file_path: string
-  file_type: string
+  title: string
+  description?: string
+  path: string
+  file_name: string
   file_size: number
+  file_type: string
   uploader_id: string
   uploader?: Profile
   created_at: string
-  member_only: boolean
+  updated_at?: string
 }
 
 export interface Event {

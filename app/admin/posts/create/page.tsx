@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { AdminOnly } from '@/components/PermissionGuard'
+import AdminLayout from '@/components/AdminLayout'
 
 export default function CreatePost() {
   const { profile } = useAuth()
@@ -53,91 +53,83 @@ export default function CreatePost() {
   }
 
   return (
-    <AdminOnly>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">发布文章 Create Post</h1>
-          <button 
-            onClick={() => router.back()} 
-            className="btn btn-outline"
-          >
-            返回 Back
-          </button>
-        </div>
+    <AdminLayout 
+      title="发布文章 Create Post" 
+      showBackButton={true}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            {/* 标题 */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg font-semibold">文章标题 Post Title</span>
+              </label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="input input-bordered w-full"
+                placeholder="请输入文章标题 Enter post title..."
+                required
+              />
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              {/* 标题 */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text text-lg font-semibold">文章标题 Post Title</span>
-                </label>
+            {/* 内容 */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg font-semibold">文章内容 Post Content</span>
+              </label>
+              <textarea
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                className="textarea textarea-bordered w-full h-64"
+                placeholder="请输入文章内容 Enter post content..."
+                required
+              />
+            </div>
+
+            {/* 发布状态 */}
+            <div className="form-control">
+              <label className="label cursor-pointer justify-start space-x-4">
                 <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="input input-bordered w-full"
-                  placeholder="请输入文章标题 Enter post title..."
-                  required
+                  type="checkbox"
+                  checked={formData.published}
+                  onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                  className="checkbox checkbox-primary"
                 />
-              </div>
+                <span className="label-text">立即发布 Publish immediately</span>
+              </label>
+            </div>
 
-              {/* 内容 */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text text-lg font-semibold">文章内容 Post Content</span>
-                </label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="textarea textarea-bordered w-full h-64"
-                  placeholder="请输入文章内容 Enter post content..."
-                  required
-                />
-              </div>
-
-              {/* 发布状态 */}
-              <div className="form-control">
-                <label className="label cursor-pointer justify-start space-x-4">
-                  <input
-                    type="checkbox"
-                    checked={formData.published}
-                    onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-                    className="checkbox checkbox-primary"
-                  />
-                  <span className="label-text">立即发布 Publish immediately</span>
-                </label>
-              </div>
-
-              {/* 提交按钮 */}
-              <div className="card-actions justify-end mt-6">
-                <button
-                  type="button"
-                  onClick={() => router.back()}
-                  className="btn btn-outline"
-                >
-                  取消 Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn primary-orange"
-                >
-                  {loading ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm"></span>
-                      发布中...
-                    </>
-                  ) : (
-                    '发布文章 Publish Post'
-                  )}
-                </button>
-              </div>
+            {/* 提交按钮 */}
+            <div className="card-actions justify-end mt-6">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="btn btn-outline"
+              >
+                取消 Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn primary-orange"
+              >
+                {loading ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    发布中...
+                  </>
+                ) : (
+                  '发布文章 Publish Post'
+                )}
+              </button>
             </div>
           </div>
-        </form>
-      </div>
-    </AdminOnly>
+        </div>
+      </form>
+    </AdminLayout>
   )
 }
+
