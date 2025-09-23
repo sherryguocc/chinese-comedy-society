@@ -111,7 +111,7 @@ export default function CreatePost() {
     try {
       const excerpt = generateExcerpt(formData.content)
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('posts')
         .insert({
           title: formData.title.trim(),

@@ -65,14 +65,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!['member', 'admin'].includes(profile.role)) {
+    if (!['member', 'admin'].includes((profile as any).role)) {
       return NextResponse.json(
         { error: 'Only members can post comments' },
         { status: 403 }
       )
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('comments')
       .insert({
         content,

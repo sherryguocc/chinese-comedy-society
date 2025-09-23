@@ -21,7 +21,7 @@ export default function HomePage() {
               <Link href="/posts" className="btn btn-outline">
                 阅读文章 Read Posts
               </Link>
-              <Link href="/Library" className="btn btn-primary">
+              <Link href="/library" className="btn btn-primary">
                 下载资料 Access Library
               </Link>
             </div>

@@ -256,7 +256,7 @@ export default function FileManagementPage() {
       
       console.log('数据库插入数据:', fileData)
 
-      const { error: dbError, data: insertedData } = await supabase
+      const { error: dbError, data: insertedData } = await (supabase as any)
         .from('files')
         .insert(fileData)
         .select('*')

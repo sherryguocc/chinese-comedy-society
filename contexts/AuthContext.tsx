@@ -220,9 +220,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Found profile
       log('fetchProfile: success', { 
-        profileId: data.id, 
-        role: data.role,
-        roleType: typeof data.role,
+        profileId: (data as any).id, 
+        role: (data as any).role,
+        roleType: typeof (data as any).role,
         fullData: data 
       });
       setProfile(data);

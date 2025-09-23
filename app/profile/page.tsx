@@ -31,7 +31,7 @@ export default function ProfilePage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({
           full_name: formData.full_name || null,

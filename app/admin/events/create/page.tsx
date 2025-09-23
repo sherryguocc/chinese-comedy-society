@@ -78,7 +78,7 @@ export default function CreateEvent() {
       console.log('Profile info:', { id: profile.id, role: profile.role, email: profile.email })
 
       // 添加超时控制的数据库操作
-      const insertPromise = supabase
+      const insertPromise = (supabase as any)
         .from('events')
         .insert(eventData)
         .select() // 添加select来获取插入的数据

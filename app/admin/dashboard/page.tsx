@@ -131,16 +131,22 @@ export default function AdminDashboard() {
     }
   }
 
+  // 用于角色更新的工具函数
+  const updateUserRole = async (userId: string, newRole: 'member' | 'guest') => {
+    const client = supabase as any
+    return await client
+      .from('profiles')
+      .update({ role: newRole })
+      .eq('id', userId)
+  }
+
   // Promote to member
   const upgradeToMember = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: 'member' })
-        .eq('id', userId)
+      const { error } = await updateUserRole(userId, 'member')
       if (error) throw error
 
-      setUsers(prev => prev.map(u => (u.id === userId ? { ...u, role: 'member' } : u)))
+      setUsers(prev => prev.map(u => (u.id === userId ? { ...u, role: 'member' as const } : u)))
       alert('用户已升级为会员 User upgraded to member successfully!')
     } catch (e) {
       console.error('Error upgrading user:', e)
@@ -151,13 +157,10 @@ export default function AdminDashboard() {
   // Demote to guest
   const downgradeToGuest = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: 'guest' })
-        .eq('id', userId)
+      const { error } = await updateUserRole(userId, 'guest')
       if (error) throw error
 
-      setUsers(prev => prev.map(u => (u.id === userId ? { ...u, role: 'guest' } : u)))
+      setUsers(prev => prev.map(u => (u.id === userId ? { ...u, role: 'guest' as const } : u)))
       alert('用户已降级为访客 User downgraded to guest successfully!')
     } catch (e) {
       console.error('Error downgrading user:', e)
