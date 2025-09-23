@@ -25,14 +25,22 @@ export default function AdminDashboard() {
       setError(null)
       setLoading(true)
 
+      console.log('Admin Dashboard: Fetching users...')
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false })
 
+      console.log('Admin Dashboard: Query result', {
+        data,
+        error,
+        dataLength: data?.length || 0
+      })
+
       if (error) throw error
       setUsers(data || [])
     } catch (error: any) {
+      console.error('Admin Dashboard: Fetch users error', error)
       setError(`获取用户列表失败: ${error.message}`)
     } finally {
       setLoading(false)
@@ -91,6 +99,18 @@ export default function AdminDashboard() {
       <div className="card bg-base-100 shadow-xl mb-8">
         <div className="card-body">
           <h2 className="card-title text-2xl mb-4">用户管理 User Management</h2>
+
+          {/* 开发模式调试信息 */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="alert alert-info mb-4">
+              <div className="text-sm">
+                <div>Debug: Users Array Length = {users.length}</div>
+                <div>Debug: Loading = {loading.toString()}</div>
+                <div>Debug: Error = {error || 'null'}</div>
+                <div>Debug: Profile Role = {profile?.role}</div>
+              </div>
+            </div>
+          )}
 
           {error ? (
             <div className="alert alert-error">

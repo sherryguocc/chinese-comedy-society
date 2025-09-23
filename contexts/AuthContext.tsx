@@ -136,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string, retryCount = 0) => {
     if (!userId) {
       warn('fetchProfile: called without userId');
+      setLoading(false); // 确保在没有userId时设置loading为false
       return;
     }
 
@@ -180,6 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           warn('fetchProfile: still not found after retries, setProfile(null)');
           setProfile(null);
+          setLoading(false); // 确保在重试失败后设置loading为false
           return;
         }
       }
@@ -197,10 +199,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       errorLog('fetchProfile: failure', err);
       setProfile(null);
-    } finally {
-      setLoading(false);
-      log('fetchProfile: done (loading=false)');
+      setLoading(false); // 确保在异常时也设置loading为false
     }
+    // 移除这里的finally，因为我们在每个分支都明确设置了loading状态
   };
 
   const refreshProfile = async () => {
