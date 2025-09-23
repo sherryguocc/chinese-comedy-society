@@ -34,6 +34,7 @@ export default function Navbar() {
             <li><Link href="/" className="text-white hover:text-orange-300 border-0">首页 Home</Link></li>
             <li><Link href="/posts" className="text-white hover:text-orange-300 border-0">文章 Posts</Link></li>
             <li><Link href="/events" className="text-white hover:text-orange-300 border-0">活动 Events</Link></li>
+            <li><Link href="/library" className="text-white hover:text-orange-300 border-0">资料库 Library</Link></li>
           </ul>
         </div>
         
@@ -65,7 +66,7 @@ export default function Navbar() {
             <li><Link href="/">首页 Home</Link></li>
             <li><Link href="/posts">文章 Posts</Link></li>
             <li><Link href="/events">活动 Events</Link></li>
-            {user && <li><Link href="/profile">个人 Profile</Link></li>}
+            <li><Link href="/library">资料库 Library</Link></li>
             {profile?.role === 'admin' && (
               <li><Link href="/admin/dashboard">管理后台 Admin</Link></li>
             )}
@@ -88,7 +89,7 @@ export default function Navbar() {
           <li><Link href="/" className="text-white hover:text-orange-300 border-0">首页 Home</Link></li>
           <li><Link href="/posts" className="text-white hover:text-orange-300 border-0">文章 Posts</Link></li>
           <li><Link href="/events" className="text-white hover:text-orange-300 border-0">活动 Events</Link></li>
-          {user && <li><Link href="/profile" className="text-white hover:text-orange-300 border-0">个人 Profile</Link></li>}
+          <li><Link href="/library" className="text-white hover:text-orange-300 border-0">资料库 Library</Link></li>
           {profile?.role === 'admin' && (
             <li><Link href="/admin/dashboard" className="text-white hover:text-orange-300 border-0">管理后台 Admin</Link></li>
           )}
@@ -117,7 +118,6 @@ export default function Navbar() {
                   )}
                 </span>
               </li>
-              <li><Link href="/profile">个人资料 Profile</Link></li>
               <li><button onClick={signOut}>退出登录 Sign Out</button></li>
             </ul>
           </div>

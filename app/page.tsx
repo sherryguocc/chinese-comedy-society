@@ -21,18 +21,11 @@ export default function HomePage() {
               <Link href="/posts" className="btn btn-outline">
                 阅读文章 Read Posts
               </Link>
-              <Link href="/test-db" className="btn btn-secondary">
-                数据库测试 DB Test
+              <Link href="/Library" className="btn btn-primary">
+                下载资料 Access Library
               </Link>
             </div>
             
-            <div className="mt-8 p-4 bg-green-100 rounded-lg">
-              <p className="text-sm text-green-800">
-                ✅ 首页现在是服务器组件，不依赖认证状态
-                <br />
-                ✅ Homepage is now a Server Component, no auth dependency
-              </p>
-            </div>
           </div>
         </div>
       </div>
