@@ -24,8 +24,8 @@ export const supabase = globalThis.__supabase ?? createClient(supabaseUrl, supab
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    storageKey: 'chinese-comedy-society-auth'
+    storageKey: 'chinese-comedy-society-auth',
+    flowType: 'pkce'
   }
 })
 
@@ -37,7 +37,9 @@ export const supabaseAdmin = globalThis.__supabaseAdmin ?? createClient(
   supabaseServiceRoleKey || supabaseAnonKey,
   {
     auth: {
-      persistSession: false
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
     }
   }
 )
