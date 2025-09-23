@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { AdminOnly } from '@/components/PermissionGuard'
+import { AdminOnly, MemberOnly } from '@/components/PermissionGuard'
 
 export default function Navbar() {
   const { user, profile, signOut } = useAuth()
@@ -20,6 +20,9 @@ export default function Navbar() {
             <li><Link href="/">首页 Home</Link></li>
             <li><Link href="/posts">文章 Posts</Link></li>
             <li><Link href="/library">资料库 Library</Link></li>
+            <MemberOnly>
+              <li><Link href="/files">文件库 Files</Link></li>
+            </MemberOnly>
             <li><Link href="/events">活动 Events</Link></li>
             {user && <li><Link href="/profile">个人 Profile</Link></li>}
             <AdminOnly>
@@ -44,6 +47,9 @@ export default function Navbar() {
           <li><Link href="/" className="text-white hover:text-orange-300 border-0">首页 Home</Link></li>
           <li><Link href="/posts" className="text-white hover:text-orange-300 border-0">文章 Posts</Link></li>
           <li><Link href="/library" className="text-white hover:text-orange-300 border-0">资料库 Library</Link></li>
+          <MemberOnly>
+            <li><Link href="/files" className="text-white hover:text-orange-300 border-0">文件库 Files</Link></li>
+          </MemberOnly>
           <li><Link href="/events" className="text-white hover:text-orange-300 border-0">活动 Events</Link></li>
           {user && <li><Link href="/profile" className="text-white hover:text-orange-300 border-0">个人 Profile</Link></li>}
           <AdminOnly>
