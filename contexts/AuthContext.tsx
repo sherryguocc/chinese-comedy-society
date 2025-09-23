@@ -72,9 +72,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
+        
+        // 如果获取会话时出错（比如无效的refresh token），清理本地存储
+        if (error) {
+          console.warn('Session error during initialization:', error);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('chinese-comedy-society-user');
+            localStorage.removeItem('chinese-comedy-society-profile');
+          }
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
         
         setUser(session?.user ?? null);
         
@@ -84,9 +97,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
           setLoading(false);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Auth initialization error:', error);
+        
+        // 如果是无效的refresh token错误，清理本地存储
+        if (error.message?.includes('Invalid Refresh Token') || 
+            error.message?.includes('Refresh Token Not Found')) {
+          console.log('Clearing invalid token data from localStorage');
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('chinese-comedy-society-user');
+            localStorage.removeItem('chinese-comedy-society-profile');
+          }
+        }
+        
         if (mounted) {
+          setUser(null);
           setProfile(null);
           setLoading(false);
         }
@@ -103,6 +128,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!mounted) return;
       
       console.log('Auth state change:', event, !!session?.user);
+      
+      // 处理认证错误，特别是无效的refresh token
+      if (event === 'SIGNED_OUT' && !session) {
+        // 清理本地存储的无效数据
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('chinese-comedy-society-user');
+          localStorage.removeItem('chinese-comedy-society-profile');
+        }
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+      
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+      }
+      
+      // 处理会话错误（如refresh token失效）
+      if (event === 'INITIAL_SESSION' && !session) {
+        // 如果初始会话获取失败，可能是因为token无效
+        if (typeof window !== 'undefined') {
+          const cachedUser = localStorage.getItem('chinese-comedy-society-user');
+          if (cachedUser) {
+            console.log('Clearing cached user data due to session failure');
+            localStorage.removeItem('chinese-comedy-society-user');
+            localStorage.removeItem('chinese-comedy-society-profile');
+          }
+        }
+      }
       
       setUser(session?.user ?? null);
       

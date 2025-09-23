@@ -26,7 +26,9 @@ export const supabase = globalThis.__supabase ?? createClient(supabaseUrl, supab
     detectSessionInUrl: true,
     storageKey: 'chinese-comedy-society-auth',
     flowType: 'pkce',
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    // 添加自定义错误处理
+    debug: false  // 减少Supabase的debug输出
   }
 })
 
