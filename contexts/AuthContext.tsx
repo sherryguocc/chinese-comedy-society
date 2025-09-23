@@ -45,6 +45,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(!getInitialUser());
   const [initializing, setInitializing] = useState(true);
 
+  // 防抖函数，避免频繁的会话检查
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return function executedFunction(...args: any[]) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
   // 缓存用户状态到localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -122,6 +135,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // 页面可见性变化处理（防抖处理）
+    const handleVisibilityChange = debounce(async () => {
+      if (document.visibilityState === 'visible') {
+        // 页面重新可见时，延迟检查会话是否仍然有效
+        // 给用户一些时间让自动刷新完成
+        setTimeout(async () => {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session && mounted) {
+              console.log('Session expired while page was hidden, signing out');
+              setUser(null);
+              setProfile(null);
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('chinese-comedy-society-user');
+                localStorage.removeItem('chinese-comedy-society-profile');
+              }
+            }
+          } catch (error) {
+            console.warn('Failed to check session on visibility change:', error);
+          }
+        }, 1000); // 延迟1秒检查
+      }
+    }, 2000); // 防抖2秒
+
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -169,15 +206,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // 添加页面可见性和窗口焦点监听器
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    
+    // 监听窗口焦点变化（可选，更精确的控制）
+    let handleFocus: (() => void) | undefined;
+    if (typeof window !== 'undefined') {
+      handleFocus = debounce(() => {
+        // 窗口重新获得焦点时，也可以进行类似的检查
+        if (user && document.visibilityState === 'visible') {
+          // 这里可以添加额外的逻辑
+          console.log('Window focused, user session active');
+        }
+      }, 1000);
+      
+      window.addEventListener('focus', handleFocus);
+    }
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      if (typeof window !== 'undefined' && handleFocus) {
+        window.removeEventListener('focus', handleFocus);
+      }
     };
-  }, []);
+  }, []); // 移除 user 依赖，避免无限循环
 
   const fetchProfile = async (userId: string) => {
     try {
-      setLoading(true);
+      // 只在没有profile时才显示loading，避免已有用户头像时的闪烁
+      if (!profile) {
+        setLoading(true);
+      }
       
       const { data, error } = await supabase
         .from('profiles')
@@ -194,7 +259,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Fetch profile error:', error);
       setProfile(null);
     } finally {
-      setLoading(false);
+      // 只在之前设置了loading时才重置
+      if (!profile) {
+        setLoading(false);
+      }
     }
   };
 

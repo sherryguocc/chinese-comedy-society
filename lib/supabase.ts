@@ -27,8 +27,10 @@ export const supabase = globalThis.__supabase ?? createClient(supabaseUrl, supab
     storageKey: 'chinese-comedy-society-auth',
     flowType: 'pkce',
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    // 添加自定义错误处理
-    debug: false  // 减少Supabase的debug输出
+    debug: false,  // 减少Supabase的debug输出
+    // 增加会话持久性设置
+    refreshTokenMaxRetries: 3,  // 刷新token的最大重试次数
+    refreshTokenRetryInterval: 1000,  // 重试间隔（毫秒）
   }
 })
 

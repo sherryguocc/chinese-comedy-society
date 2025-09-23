@@ -6,14 +6,15 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { EventType } from '@/types/database'
 import Link from 'next/link'
+import AdminLayout from '@/components/AdminLayout'
 
 // 活动类型选项
 const EVENT_TYPE_OPTIONS: { value: EventType; label: string; icon: string; description: string }[] = [
   { value: 'show', label: '演出', icon: '🎭', description: '正式的喜剧演出活动' },
-  { value: 'openmic', label: '开放麦', icon: '🎤', description: '开放麦克风活动，欢迎大家参与' },
+  { value: 'openmic', label: '开放麦', icon: '🎤', description: '开放麦克风活动' },
   { value: 'training', label: '培训', icon: '📚', description: '喜剧技能培训和工作坊' },
   { value: 'meetup', label: '聚会', icon: '👥', description: '社区聚会和交流活动' },
-  { value: 'readingsession', label: '读稿会', icon: '📖', description: '剧本读稿和讨论会' }
+  { value: 'readingsession', label: '读稿会', icon: '📖', description: '读稿和讨论会' }
 ]
 
 export default function CreateEvent() {
@@ -28,7 +29,7 @@ export default function CreateEvent() {
     end_time: '',
     location: '',
     event_type: 'meetup' as EventType,
-    organiser: '华人喜剧协会'
+    organiser: '华人喜剧协会CCS'
   })
 
   // 添加超时检测
@@ -185,25 +186,7 @@ export default function CreateEvent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* 管理后台头部 */}
-      <div className="flex items-center gap-4 mb-8">
-        <Link href="/admin/dashboard" className="btn btn-circle btn-outline">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </Link>
-        <h1 className="text-3xl font-bold">创建活动 Create Event</h1>
-      </div>
-
-      {/* 面包屑导航 */}
-      <div className="text-sm breadcrumbs mb-6">
-        <ul>
-          <li><Link href="/">首页</Link></li>
-          <li><Link href="/admin/dashboard">管理后台</Link></li>
-          <li className="text-base-content/60">创建活动</li>
-        </ul>
-      </div>
+    <AdminLayout title="创建活动 Create Event" showBackButton={true}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
@@ -407,7 +390,7 @@ export default function CreateEvent() {
           </div>
         )}
       </form>
-    </div>
+   </AdminLayout>
   )
 }
 

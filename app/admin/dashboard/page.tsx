@@ -12,6 +12,12 @@ export default function AdminDashboard() {
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [authTimeout, setAuthTimeout] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // 修复 hydration 问题
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // 添加超时检测
   useEffect(() => {
@@ -35,6 +41,47 @@ export default function AdminDashboard() {
       fetchUsers()
     }
   }, [profile])
+
+  // 修复 Supabase 查询
+  const fetchUsers = async () => {
+    try {
+      setError(null)
+      setDataLoading(true)
+
+      console.log('Admin Dashboard: Fetching users...')
+      
+      // 修复连接测试查询 - 使用正确的语法
+      const { data: testData, error: testError } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+      
+      console.log('Admin Dashboard: Connection test:', { testData, testError })
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      console.log('Admin Dashboard: Query result', {
+        data,
+        error,
+        dataLength: data?.length || 0
+      })
+
+      if (error) throw error
+      setUsers(data || [])
+    } catch (error: any) {
+      console.error('Admin Dashboard: Fetch users error', error)
+      setError(`获取用户列表失败: ${error.message}`)
+    } finally {
+      setDataLoading(false)
+    }
+  }
+
+  // 防止 hydration 错误
+  if (!mounted) {
+    return null
+  }
 
   // 如果验证超时
   if (authTimeout) {
@@ -103,38 +150,9 @@ export default function AdminDashboard() {
     )
   }
 
-  // Load users for admin
-  const fetchUsers = async () => {
-    try {
-      setError(null)
-      setDataLoading(true)
-
-      console.log('Admin Dashboard: Fetching users...')
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      console.log('Admin Dashboard: Query result', {
-        data,
-        error,
-        dataLength: data?.length || 0
-      })
-
-      if (error) throw error
-      setUsers(data || [])
-    } catch (error: any) {
-      console.error('Admin Dashboard: Fetch users error', error)
-      setError(`获取用户列表失败: ${error.message}`)
-    } finally {
-      setDataLoading(false)
-    }
-  }
-
   // 用于角色更新的工具函数
   const updateUserRole = async (userId: string, newRole: 'member' | 'guest') => {
-    const client = supabase as any
-    return await client
+    return await supabase
       .from('profiles')
       .update({ role: newRole })
       .eq('id', userId)
@@ -325,4 +343,3 @@ export default function AdminDashboard() {
     </div>
   )
 }
-

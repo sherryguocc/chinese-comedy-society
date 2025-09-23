@@ -102,14 +102,24 @@ export default function Navbar() {
           <div className="dropdown dropdown-end">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar border-0">
               <div className="w-10 rounded-full bg-orange-500 text-white flex items-center justify-center">
-                {profile?.full_name?.[0] || profile?.username?.[0] || profile?.email?.[0] || 'U'}
+                {(() => {
+                  if (profile?.full_name) return profile.full_name[0].toUpperCase();
+                  if (profile?.username) return profile.username[0].toUpperCase();
+                  if (user?.email) return user.email[0].toUpperCase();
+                  return 'U';
+                })()}
               </div>
             </div>
             <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
               <li>
                 <span className="text-sm">
                   <div className="font-semibold">
-                    {profile?.full_name || profile?.username || profile?.email?.split('@')[0]}
+                    {(() => {
+                      if (profile?.full_name) return profile.full_name;
+                      if (profile?.username) return profile.username;
+                      if (user?.email) return user.email.split('@')[0];
+                      return 'User';
+                    })()}
                   </div>
                   {profile?.username && profile?.full_name && (
                     <div className="text-xs text-gray-500">@{profile.username}</div>
@@ -119,7 +129,14 @@ export default function Navbar() {
                   )}
                 </span>
               </li>
-              <li><button onClick={signOut}>退出登录 Sign Out</button></li>
+              <li>
+                <button 
+                  onClick={signOut}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  退出登录 Logout
+                </button>
+              </li>
             </ul>
           </div>
         ) : (

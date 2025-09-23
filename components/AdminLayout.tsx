@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { ReactNode, useEffect, useState } from 'react'
+import AdminNavigation from './AdminNavigation'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -139,30 +140,10 @@ export default function AdminLayout({
     <div className="container mx-auto px-4 py-8">
       {/* 统一的管理员头部 */}
       <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4">
-          {showBackButton && (
-            <Link href="/admin/dashboard" className="btn btn-circle btn-outline">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </Link>
-          )}
-          <h1 className="text-3xl font-bold">{title}</h1>
-        </div>
-        
-        <div className="flex gap-4">
-          <Link href="/admin/posts/create" className="btn primary-orange">
-            发布文章 Create Post
-          </Link>
-          <Link href="/admin/events/create" className="btn bg-black hover:bg-gray-800 text-white">
-            创建活动 Create Event
-          </Link>
-          <Link href="/admin/files" className="btn bg-orange-600 hover:bg-orange-700 text-white">
-            文件管理 File Management
-          </Link>
-        </div>
+        <h1 className="text-3xl font-bold">{title}</h1>
+        <AdminNavigation />
       </div>
-
+      
       {/* 面包屑导航 */}
       <div className="text-sm breadcrumbs mb-6">
         <ul>
