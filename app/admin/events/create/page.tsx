@@ -79,14 +79,19 @@ export default function CreateEvent() {
       console.log('Profile info:', { id: profile.id, role: profile.role, email: profile.email })
 
       // 添加超时控制的数据库操作
-      const insertPromise = (supabase as any)
+      const insertPromise = supabase
         .from('events')
+        // @ts-ignore - Temporary fix for Supabase type inference
         .insert(eventData)
         .select() // 添加select来获取插入的数据
 
       console.log('Starting database insert...')
       
-      const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Database operation timeout after 15 seconds')), 15000)
+      })
+      
+      const { data, error } = await Promise.race([insertPromise, timeoutPromise])
 
       console.log('Insert result:', { data, error })
 

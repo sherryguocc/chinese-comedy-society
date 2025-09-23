@@ -9,7 +9,7 @@ export default function DiagnosticPage() {
 
   const runDiagnostics = async () => {
     setLoading(true)
-    const results: any = {}
+    const results: Record<string, any> = {}
 
     try {
       // 测试环境变量

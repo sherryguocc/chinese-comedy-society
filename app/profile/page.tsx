@@ -31,8 +31,9 @@ export default function ProfilePage() {
 
     setLoading(true)
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('profiles')
+        // @ts-ignore - Temporary fix for Supabase type inference
         .update({
           full_name: formData.full_name || null,
           username: formData.username || null,

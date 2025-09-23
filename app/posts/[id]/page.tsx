@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Post } from '@/types/database'
+import SafeHtmlRenderer from '@/components/SafeHtmlRenderer'
 
 export default function PostDetailPage() {
   const params = useParams()
@@ -26,7 +27,8 @@ export default function PostDetailPage() {
           author:profiles(*)
         `)
         .eq('id', id)
-        .eq('published', true)
+        // 暂时移除 published 过滤，直到数据库表更新
+        // .eq('published', true)
         .single()
 
       if (error) throw error
@@ -85,13 +87,9 @@ export default function PostDetailPage() {
 
         {/* 文章内容 */}
         <div className="p-8">
-          <div
-            className="prose prose-lg max-w-none"
-            style={{
-              lineHeight: '1.8',
-              fontSize: '16px',
-            }}
-            dangerouslySetInnerHTML={{ __html: post.content }}
+          <SafeHtmlRenderer 
+            htmlContent={post.content}
+            className="article-content"
           />
         </div>
 

@@ -250,7 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .maybeSingle();
 
-      if (error && (error as any).code !== 'PGRST116') {
+      if (error && error.code !== 'PGRST116') {
         throw error;
       }
 

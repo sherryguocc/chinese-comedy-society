@@ -102,32 +102,132 @@ export default function CreatePost() {
   // 表单提交
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
     if (!formData.title.trim() || !formData.content.trim()) {
-      alert('请填写标题和内容')
+      alert('请填写标题和内容 Please fill in title and content')
+      return
+    }
+
+    if (!profile?.id) {
+      alert('用户信息获取失败，请重新登录 User info not found, please login again')
       return
     }
 
     setLoading(true)
+    console.log('Starting post submission...')
+    console.log('Form data:', {
+      title: formData.title.trim(),
+      contentLength: formData.content.length,
+      published: formData.published,
+      authorId: profile.id
+    })
+
     try {
-      const excerpt = generateExcerpt(formData.content)
-      
-      const { error } = await (supabase as any)
+      // 首先测试Supabase连接
+      console.log('Testing Supabase connection...')
+      const { data: connectionTest, error: connectionError } = await supabase
         .from('posts')
-        .insert({
-          title: formData.title.trim(),
-          content: formData.content,
-          excerpt: excerpt,
-          author_id: profile?.id,
-          published: formData.published
+        .select('id')
+        .limit(1)
+      
+      console.log('Connection test result:', { 
+        success: !connectionError, 
+        error: connectionError?.message,
+        dataExists: !!connectionTest?.length 
+      })
+
+      if (connectionError) {
+        throw new Error(`Supabase connection failed: ${connectionError.message}`)
+      }
+
+      const excerpt = generateExcerpt(formData.content)
+      console.log('Generated excerpt:', excerpt)
+      
+      // 准备插入的数据 - 使用最小化的数据结构
+      const insertData = {
+        title: formData.title.trim(),
+        content: formData.content,
+        author_id: profile.id
+      }
+      
+      console.log('About to insert data:', insertData)
+      console.log('Note: published and excerpt fields are temporarily excluded until database is updated')
+      
+      // 简化的插入操作 - 不使用 Promise.race 先测试
+      console.log('Attempting direct insert without timeout...')
+      
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          // @ts-ignore - Temporary fix for Supabase type inference
+          .insert(insertData)
+          .select()
+
+        console.log('Direct insert result:', { data, error })
+
+        if (error) {
+          console.error('Database error:', error)
+          console.error('Error details:', {
+            message: error.message,
+            details: error.details || 'No details',
+            hint: error.hint || 'No hint',
+            code: error.code || 'No code'
+          })
+          throw error
+        }
+
+        if (!data || data.length === 0) {
+          throw new Error('No data returned from insert operation')
+        }
+
+        console.log('Post created successfully:', data)
+        alert(`文章${formData.published ? '发布' : '保存'}成功！ Post ${formData.published ? 'published' : 'saved'} successfully!`)
+        router.push('/admin/dashboard')
+        
+      } catch (directError) {
+        console.log('Direct insert failed, trying with timeout...')
+        console.error('Direct error:', directError)
+        
+        // 如果直接插入失败，尝试带超时的版本
+        const insertPromise = supabase
+          .from('posts')
+          // @ts-ignore - Temporary fix for Supabase type inference
+          .insert(insertData)
+          .select()
+
+        console.log('Supabase insert query created, waiting for response...')
+        
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Database operation timeout after 5 seconds')), 5000)
         })
 
-      if (error) throw error
+        const result = await Promise.race([insertPromise, timeoutPromise])
+        const { data, error } = result
 
-      alert('文章发布成功！')
-      router.push('/admin/dashboard')
+        console.log('Insert result:', { data, error })
+
+        if (error) {
+          console.error('Database error:', error)
+          console.error('Error details:', {
+            message: error.message,
+            details: error.details || 'No details',
+            hint: error.hint || 'No hint',
+            code: error.code || 'No code'
+          })
+          throw error
+        }
+
+        if (!data || data.length === 0) {
+          throw new Error('No data returned from insert operation')
+        }
+
+        console.log('Post created successfully:', data)
+        alert(`文章${formData.published ? '发布' : '保存'}成功！ Post ${formData.published ? 'published' : 'saved'} successfully!`)
+        router.push('/admin/dashboard')
+      }
     } catch (error: any) {
-      console.error('发布失败:', error)
-      alert(`发布失败: ${error.message}`)
+      console.error('发布失败 Publish failed:', error)
+      alert(`发布失败 Publish failed: ${error.message || '未知错误 Unknown error'}`)
     } finally {
       setLoading(false)
     }

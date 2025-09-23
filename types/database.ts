@@ -18,6 +18,7 @@ export interface Post {
   excerpt?: string // 文章摘要
   author_id: string
   author?: Profile
+  published: boolean // 是否已发布
   created_at: string
 }
 

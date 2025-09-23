@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Post } from '@/types/database'
 import { AdminOnly } from '@/components/PermissionGuard'
+import SafeHtmlRenderer from '@/components/SafeHtmlRenderer'
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([])
@@ -22,7 +23,8 @@ export default function PostsPage() {
           *,
           author:profiles(*)
         `)
-        .eq('published', true)
+        // 暂时移除 published 过滤，直到数据库表更新
+        // .eq('published', true)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -69,9 +71,11 @@ export default function PostsPage() {
                     {post.title}
                   </Link>
                 </h2>
-                <p className="text-base-content/70 line-clamp-3">
-                  {post.content.substring(0, 150)}...
-                </p>
+                <SafeHtmlRenderer 
+                  htmlContent={post.content}
+                  excerpt={true}
+                  className="line-clamp-3"
+                />
                 <div className="card-actions justify-between items-center mt-4">
                   <div className="text-sm text-base-content/60">
                     <div>作者: {post.author?.full_name || post.author?.email}</div>

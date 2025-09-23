@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [authTimeout, setAuthTimeout] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [fetchAttempted, setFetchAttempted] = useState(false) // 防止重复请求
 
   // 修复 hydration 问题
   useEffect(() => {
@@ -37,10 +38,19 @@ export default function AdminDashboard() {
   }, [loading])
 
   useEffect(() => {
-    if (profile?.role === 'admin') {
+    console.log('Admin Dashboard: Auth state changed', {
+      user: user?.id,
+      profile: profile?.role,
+      loading,
+      fetchAttempted
+    })
+    
+    if (!loading && profile?.role === 'admin' && !fetchAttempted) {
+      console.log('Admin Dashboard: User is admin, fetching users...')
+      setFetchAttempted(true)
       fetchUsers()
     }
-  }, [profile])
+  }, [profile?.role, loading, fetchAttempted]) // 只依赖 role 和 loading 状态
 
   // 修复 Supabase 查询
   const fetchUsers = async () => {
@@ -49,13 +59,6 @@ export default function AdminDashboard() {
       setDataLoading(true)
 
       console.log('Admin Dashboard: Fetching users...')
-      
-      // 修复连接测试查询 - 使用正确的语法
-      const { data: testData, error: testError } = await supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-      
-      console.log('Admin Dashboard: Connection test:', { testData, testError })
 
       const { data, error } = await supabase
         .from('profiles')
@@ -63,9 +66,9 @@ export default function AdminDashboard() {
         .order('created_at', { ascending: false })
 
       console.log('Admin Dashboard: Query result', {
-        data,
-        error,
-        dataLength: data?.length || 0
+        success: !error,
+        userCount: data?.length || 0,
+        error: error?.message
       })
 
       if (error) throw error
@@ -152,10 +155,13 @@ export default function AdminDashboard() {
 
   // 用于角色更新的工具函数
   const updateUserRole = async (userId: string, newRole: 'member' | 'guest') => {
-    return await supabase
+    const { data, error } = await supabase
       .from('profiles')
+      // @ts-ignore - Temporary fix for Supabase type inference
       .update({ role: newRole })
       .eq('id', userId)
+    
+    return { data, error }
   }
 
   // Promote to member
