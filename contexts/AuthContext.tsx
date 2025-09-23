@@ -111,8 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // In some cases (SIGNED_UP, TOKEN_REFRESHED) DB triggers may still be running
-        if (event === 'SIGNED_IN' || event === 'SIGNED_UP' || event === 'TOKEN_REFRESHED') {
+        // In some cases (TOKEN_REFRESHED) DB triggers may still be running
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           log('onAuthStateChange: wait 500ms to let DB settle');
           await new Promise((resolve) => setTimeout(resolve, 500));
         }

@@ -70,8 +70,8 @@ export default function EventsPage() {
       ) : events.length > 0 ? (
         <div className="space-y-6">
           {events.map((event) => {
-            const eventDate = formatEventDate(event.event_date)
-            const isUpcoming = new Date(event.event_date) > new Date()
+            const eventDate = formatEventDate(event.start_time)
+            const isUpcoming = new Date(event.start_time) > new Date()
             
             return (
               <div key={event.id} className={`card bg-base-100 shadow-xl ${isUpcoming ? 'border-l-4 border-orange-500' : ''}`}>

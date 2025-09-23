@@ -22,10 +22,10 @@ export interface Post {
 }
 
 export interface File {
-  id?: string
+  id: string
   title: string
   description?: string
-  path: string
+  file_path: string
   file_name: string
   file_size: number
   file_type: string

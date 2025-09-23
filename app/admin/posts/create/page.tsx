@@ -314,7 +314,6 @@ export default function CreatePost() {
                   // 延迟更新以确保粘贴内容被处理
                   setTimeout(handleContentChange, 10)
                 }}
-                placeholder="开始输入您的文章内容..."
               />
               
               <div className="label">

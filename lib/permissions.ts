@@ -2,23 +2,23 @@ import { UserRole } from '@/types/database'
 
 export const PERMISSIONS = {
   // 管理员权限
-  CREATE_POST: ['admin'],
-  EDIT_POST: ['admin'],
-  DELETE_POST: ['admin'],
-  CREATE_EVENT: ['admin'],
-  EDIT_EVENT: ['admin'],
-  DELETE_EVENT: ['admin'],
-  UPLOAD_FILE: ['admin'],
-  DELETE_FILE: ['admin'],
-  MANAGE_USERS: ['admin'],
+  CREATE_POST: ['admin'] as UserRole[],
+  EDIT_POST: ['admin'] as UserRole[],
+  DELETE_POST: ['admin'] as UserRole[],
+  CREATE_EVENT: ['admin'] as UserRole[],
+  EDIT_EVENT: ['admin'] as UserRole[],
+  DELETE_EVENT: ['admin'] as UserRole[],
+  UPLOAD_FILE: ['admin'] as UserRole[],
+  DELETE_FILE: ['admin'] as UserRole[],
+  MANAGE_USERS: ['admin'] as UserRole[],
   
   // 会员权限
-  COMMENT_POST: ['member', 'admin'],
-  DOWNLOAD_FILE: ['member', 'admin'],
+  COMMENT_POST: ['member', 'admin'] as UserRole[],
+  DOWNLOAD_FILE: ['member', 'admin'] as UserRole[],
   
   // 访客权限
-  VIEW_POST: ['guest', 'member', 'admin'],
-  VIEW_EVENT: ['guest', 'member', 'admin'],
+  VIEW_POST: ['guest', 'member', 'admin'] as UserRole[],
+  VIEW_EVENT: ['guest', 'member', 'admin'] as UserRole[],
 } as const
 
 export function hasPermission(userRole: UserRole | null, permission: keyof typeof PERMISSIONS): boolean {
