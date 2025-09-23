@@ -228,7 +228,7 @@ export default function FilesViewPage() {
 
                   <div className="card-actions justify-between mt-4">
                     <button
-                      onClick={() => downloadFile(file.file_path, file.file_name)}
+                      onClick={() => downloadFile(file.path, file.file_name)}
                       className="btn primary-orange btn-sm"
                     >
                       下载 Download
@@ -236,7 +236,7 @@ export default function FilesViewPage() {
                     
                     <AdminOnly>
                       <button
-                        onClick={() => deleteFile(file.id, file.file_path)}
+                        onClick={() => deleteFile(file.id, file.path)}
                         className="btn btn-error btn-sm"
                       >
                         删除 Delete

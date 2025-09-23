@@ -60,7 +60,7 @@ CREATE TABLE files (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
-  file_path TEXT NOT NULL,
+  path TEXT NOT NULL,
   file_size INTEGER,
   uploaded_by UUID REFERENCES profiles(id) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()

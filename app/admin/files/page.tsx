@@ -247,7 +247,7 @@ export default function FileManagementPage() {
       const fileData = {
         title: uploadForm.title.trim(),
         description: uploadForm.description.trim() || null,
-        file_path: filePath,
+        path: filePath,
         file_name: uploadForm.file.name,
         file_size: uploadForm.file.size,
         file_type: uploadForm.file.type,
@@ -536,7 +536,7 @@ export default function FileManagementPage() {
                       <td>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => deleteFile(file.id, file.file_path)}
+                            onClick={() => deleteFile(file.id, file.path)}
                             className="btn btn-sm btn-error"
                           >
                             删除 Delete

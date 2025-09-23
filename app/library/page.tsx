@@ -151,7 +151,7 @@ export default function LibraryPage() {
 
                   <div className="card-actions justify-end mt-4">
                     <button
-                      onClick={() => downloadFile(file.file_path, file.file_name)}
+                      onClick={() => downloadFile(file.path, file.file_name)}
                       className="btn primary-orange btn-sm"
                     >
                       下载 Download

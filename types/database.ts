@@ -25,7 +25,7 @@ export interface File {
   id: string
   title: string
   description?: string
-  file_path: string
+  path: string
   file_name: string
   file_size: number
   file_type: string
