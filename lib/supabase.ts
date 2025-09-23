@@ -25,7 +25,8 @@ export const supabase = globalThis.__supabase ?? createClient(supabaseUrl, supab
     autoRefreshToken: true,
     detectSessionInUrl: true,
     storageKey: 'chinese-comedy-society-auth',
-    flowType: 'pkce'
+    flowType: 'pkce',
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined
   }
 })
 

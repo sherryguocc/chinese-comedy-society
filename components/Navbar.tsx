@@ -12,8 +12,8 @@ export default function Navbar() {
     setMounted(true)
   }, [])
 
-  // 在组件mounted之前显示简化版本
-  if (!mounted || loading) {
+  // 在组件未挂载前始终显示骨架版本以避免hydration错误
+  if (!mounted) {
     return (
       <div className="navbar bg-gradient-to-r from-black to-orange-900 shadow-lg">
         <div className="navbar-start">
@@ -40,19 +40,15 @@ export default function Navbar() {
         
         <div className="navbar-end">
           <div className="flex gap-2">
-            <Link href="/auth/login" className="btn btn-ghost text-white hover:text-orange-300 border-0">
-              登录 Login
-            </Link>
-            <Link href="/auth/register" className="btn bg-orange-500 hover:bg-orange-600 text-white border-0">
-              注册 Register
-            </Link>
+            <div className="skeleton h-8 w-16"></div>
+            <div className="skeleton h-8 w-16"></div>
           </div>
         </div>
       </div>
     )
   }
 
-  // 如果已登录，显示完整导航
+  // 挂载后显示实际内容
   return (
     <div className="navbar bg-gradient-to-r from-black to-orange-900 shadow-lg">
       <div className="navbar-start">
@@ -97,7 +93,12 @@ export default function Navbar() {
       </div>
       
       <div className="navbar-end">
-        {user ? (
+        {loading ? (
+          <div className="flex gap-2">
+            <div className="skeleton h-8 w-16"></div>
+            <div className="skeleton h-8 w-16"></div>
+          </div>
+        ) : user ? (
           <div className="dropdown dropdown-end">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar border-0">
               <div className="w-10 rounded-full bg-orange-500 text-white flex items-center justify-center">

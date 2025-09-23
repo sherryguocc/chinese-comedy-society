@@ -18,9 +18,54 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  // 在初始化时检查localStorage
+  const getInitialUser = (): User | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem('chinese-comedy-society-user');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const getInitialProfile = (): Profile | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem('chinese-comedy-society-profile');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [user, setUser] = useState<User | null>(getInitialUser);
+  const [profile, setProfile] = useState<Profile | null>(getInitialProfile);
+  // 如果有缓存的用户数据，初始loading为false，否则为true
+  const [loading, setLoading] = useState(!getInitialUser());
+  const [initializing, setInitializing] = useState(true);
+
+  // 缓存用户状态到localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (user) {
+        localStorage.setItem('chinese-comedy-society-user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('chinese-comedy-society-user');
+      }
+    }
+  }, [user]);
+
+  // 缓存profile到localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (profile) {
+        localStorage.setItem('chinese-comedy-society-profile', JSON.stringify(profile));
+      } else {
+        localStorage.removeItem('chinese-comedy-society-profile');
+      }
+    }
+  }, [profile]);
 
   useEffect(() => {
     let mounted = true;
@@ -36,12 +81,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           await fetchProfile(session.user.id);
         } else {
+          setProfile(null);
           setLoading(false);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          setProfile(null);
           setLoading(false);
+        }
+      } finally {
+        if (mounted) {
+          setInitializing(false);
         }
       }
     };
@@ -50,6 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
+      
+      console.log('Auth state change:', event, !!session?.user);
       
       setUser(session?.user ?? null);
       
@@ -103,20 +156,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) throw error;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Supabase signIn error:', error);
+        throw error;
+      }
+    } catch (err) {
+      console.error('SignIn error:', err);
+      throw err;
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    
-    setUser(null);
-    setProfile(null);
+    try {
+      // 检查是否有当前会话
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // 只有在有会话的情况下才调用signOut
+        const { error } = await supabase.auth.signOut();
+        if (error && error.message !== 'Auth session missing!') {
+          console.error('SignOut error:', error);
+          throw error;
+        }
+      }
+      
+      // 无论如何都清理本地状态
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      
+      // 清理所有本地存储
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('chinese-comedy-society-auth');
+        localStorage.removeItem('chinese-comedy-society-user');
+        localStorage.removeItem('chinese-comedy-society-profile');
+      }
+    } catch (err: any) {
+      console.error('SignOut error:', err);
+      
+      // 即使出错也要清理本地状态
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      
+      // 清理本地存储
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('chinese-comedy-society-auth');
+        localStorage.removeItem('chinese-comedy-society-user');
+        localStorage.removeItem('chinese-comedy-society-profile');
+      }
+      
+      // 只在非会话错误时抛出异常
+      if (!err.message?.includes('Auth session missing')) {
+        throw err;
+      }
+    }
   };
 
   const refreshProfile = async () => {
