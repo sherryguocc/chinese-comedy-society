@@ -1,228 +1,325 @@
-'use client'
+'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
-import { Profile } from '@/types/database'
+import { createContext, useContext, useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
+import type { Profile } from '@/types/database';
+
+const DEBUG = true; // flip to false to silence logs
+const TAG = '[Auth]';
+
+// Small helper to log conditionally
+const log = (...args: any[]) => {
+  if (DEBUG) console.log(TAG, ...args);
+};
+const warn = (...args: any[]) => {
+  if (DEBUG) console.warn(TAG, ...args);
+};
+const errorLog = (...args: any[]) => {
+  if (DEBUG) console.error(TAG, ...args);
+};
 
 interface AuthContextType {
-  user: User | null
-  profile: Profile | null
-  loading: boolean
-  signUp: (email: string, password: string, fullName?: string) => Promise<void>
-  signIn: (email: string, password: string) => Promise<void>
-  signOut: () => Promise<void>
-  refreshProfile: () => Promise<void>
+  user: User | null;
+  profile: Profile | null;
+  loading: boolean;        // profile loading state
+  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [initializing, setInitializing] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);       // specifically for profile fetching
+  const [initializing, setInitializing] = useState(true); // boot-time flag
+
+  // Log state snapshots whenever these change
+  useEffect(() => {
+    log('State snapshot ->', {
+      userId: user?.id ?? null,
+      userEmail: user?.email ?? null,
+      hasProfile: !!profile,
+      profileRole: profile?.role ?? null,
+      profileRoleType: typeof profile?.role,
+      profileData: profile ? { id: profile.id, email: profile.email, role: profile.role } : null,
+      loading,
+      initializing,
+    });
+  }, [user, profile, loading, initializing]);
 
   useEffect(() => {
-    let mounted = true
+    log('Mount: initializing auth flow...');
+
+    let mounted = true;
 
     const initializeAuth = async () => {
+      log('initializeAuth: start getSession()');
       try {
-        // 获取当前会话
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        log('initializeAuth: getSession() result', {
+          hasSession: !!session,
+          userId: session?.user?.id ?? null,
+          error: error?.message ?? null,
+        });
+
         if (error) {
-          console.error('获取会话失败:', error)
-          return
+          warn('initializeAuth: getSession error', error);
         }
 
-        if (mounted) {
-          setUser(session?.user ?? null)
-          
-          if (session?.user) {
-            await fetchProfile(session.user.id)
-          } else {
-            setLoading(false)
-          }
+        if (!mounted) return;
+
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          // We have a session → fetch profile
+          log('initializeAuth: session user found → fetchProfile');
+          await fetchProfile(session.user.id);
+        } else {
+          // No session → no profile
+          log('initializeAuth: no session, stop profile loading');
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('初始化认证失败:', error)
-        if (mounted) {
-          setLoading(false)
-        }
+      } catch (err) {
+        errorLog('initializeAuth: unexpected failure', err);
+        if (mounted) setLoading(false);
       } finally {
         if (mounted) {
-          setInitializing(false)
+          log('initializeAuth: finished');
+          setInitializing(false);
         }
       }
-    }
+    };
 
-    initializeAuth()
+    initializeAuth();
 
-    // 监听认证状态变化
+    // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return
+      if (!mounted) return;
 
-      console.log('Auth state change:', event, session?.user?.email)
-      
-      setUser(session?.user ?? null)
-      
+      log('onAuthStateChange:', {
+        event,
+        hasSession: !!session,
+        userEmail: session?.user?.email ?? null,
+        userId: session?.user?.id ?? null,
+      });
+
+      setUser(session?.user ?? null);
+
       if (session?.user) {
-        // 对于登录和注册事件，稍等片刻确保数据库操作完成
+        // In some cases (SIGNED_UP, TOKEN_REFRESHED) DB triggers may still be running
         if (event === 'SIGNED_IN' || event === 'SIGNED_UP' || event === 'TOKEN_REFRESHED') {
-          await new Promise(resolve => setTimeout(resolve, 500))
+          log('onAuthStateChange: wait 500ms to let DB settle');
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
-        await fetchProfile(session.user.id)
+        await fetchProfile(session.user.id);
       } else {
-        setProfile(null)
-        setLoading(false)
+        // Signed out or session revoked
+        log('onAuthStateChange: no user, clear profile');
+        setProfile(null);
+        setLoading(false);
       }
-    })
+    });
 
     return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
-  }, [])
+      log('Unmount: cleanup auth subscription');
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
+  // Fetch profile with retries
   const fetchProfile = async (userId: string, retryCount = 0) => {
-    if (!userId) return
+    if (!userId) {
+      warn('fetchProfile: called without userId');
+      return;
+    }
 
     try {
-      console.log(`获取用户资料: ${userId} (尝试 ${retryCount + 1})`)
-      
+      if (retryCount === 0) setLoading(true);
+      log(`fetchProfile: start (try ${retryCount + 1}), userId=${userId}`);
+
+      // Check current auth state for debugging
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      log('fetchProfile: current auth state', {
+        authUserId: user?.id ?? null,
+        authUserEmail: user?.email ?? null,
+        authError: authError?.message ?? null,
+        queryingUserId: userId,
+      });
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle()
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error
-      }
+      log('fetchProfile: query result', {
+        hasData: !!data,
+        error: error?.message ?? null,
+        code: (error as any)?.code ?? null,
+        hint: (error as any)?.hint ?? null,
+        details: (error as any)?.details ?? null,
+      });
 
-      if (!data && retryCount < 2) {
-        // 如果没有找到profile，等待后重试
-        console.log(`未找到用户资料，${2000}ms后重试...`)
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        return fetchProfile(userId, retryCount + 1)
+      // If database returned an error that is not "row not found"
+      if (error && (error as any).code !== 'PGRST116') {
+        throw error;
       }
 
       if (!data) {
-        console.log('未找到用户资料，尝试手动创建...')
-        const { data: userData } = await supabase.auth.getUser()
-        
-        if (userData.user) {
-          const profileData = {
-            id: userId,
-            email: userData.user.email!,
-            full_name: userData.user.user_metadata?.full_name || null,
-            username: null,
-            phone_number: null,
-            role: 'guest' as const
-          }
-          
-          console.log('创建用户资料数据:', profileData)
-
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert(profileData)
-            .select()
-            .single()
-
-          if (createError) {
-            console.error('创建用户资料失败:', createError)
-            throw createError
-          } else {
-            console.log('用户资料创建成功:', newProfile)
-            setProfile(newProfile)
-          }
+        if (retryCount < 2) {
+          const delay = 1500;
+          log(`fetchProfile: not found → retry after ${delay}ms`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return fetchProfile(userId, retryCount + 1);
+        } else {
+          warn('fetchProfile: still not found after retries, setProfile(null)');
+          setProfile(null);
+          return;
         }
-      } else {
-        console.log('用户资料加载成功:', data)
-        setProfile(data)
       }
-    } catch (error) {
-      console.error('获取用户资料失败:', error)
-      setProfile(null)
+
+      // Found profile
+      log('fetchProfile: success', { 
+        profileId: data.id, 
+        role: data.role,
+        roleType: typeof data.role,
+        fullData: data 
+      });
+      setProfile(data);
+      setLoading(false); // 确保在成功时立即设置 loading 为 false
+      log('fetchProfile: profile set, loading=false');
+    } catch (err) {
+      errorLog('fetchProfile: failure', err);
+      setProfile(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
+      log('fetchProfile: done (loading=false)');
     }
-  }
+  };
 
   const refreshProfile = async () => {
     if (!user?.id) {
-      console.log('没有用户，无法刷新资料')
-      return
+      warn('refreshProfile: no user, skip');
+      return;
     }
-    
-    console.log('刷新用户资料:', user.id)
-    setLoading(true)
-    await fetchProfile(user.id, 0)
-  }
+    log('refreshProfile: start', { userId: user.id });
+    setLoading(true);
+    await fetchProfile(user.id, 0);
+    log('refreshProfile: completed');
+  };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
+    log('signUp: called', { email, hasFullName: !!fullName });
 
-    if (error) throw error
-    return data
-  }
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName },
+          // Safe-guard: window may be undefined on SSR, but this file is a Client Component.
+          emailRedirectTo: typeof window !== 'undefined'
+            ? `${window.location.origin}/auth/callback`
+            : undefined,
+        },
+      });
+
+      log('signUp: result', {
+        userId: data.user?.id ?? null,
+        session: !!data.session,
+        error: error?.message ?? null,
+      });
+
+      if (error) throw error;
+
+      // NOTE: Depending on email confirmation, there may be NO session yet.
+      // Profile row is usually created via DB trigger or a server-side edge function.
+      // We let onAuthStateChange handle profile fetching if/when session appears.
+      return data as any;
+    } catch (err: any) {
+      errorLog('signUp: failure', err);
+      throw err;
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    log('signIn: called', { email });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) throw error
-    return data
-  }
+      log('signIn: result', {
+        userId: data.user?.id ?? null,
+        hasSession: !!data.session,
+        error: error?.message ?? null,
+      });
+
+      if (error) throw error;
+      return data as any;
+    } catch (err: any) {
+      errorLog('signIn: failure', err);
+      throw err;
+    }
+  };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-    
-    setUser(null)
-    setProfile(null)
-  }
+    log('signOut: called');
 
-  // 在初始化完成前显示loading
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      log('signOut: success, clear local states');
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+    } catch (err: any) {
+      errorLog('signOut: failure', err);
+      throw err;
+    }
+  };
+
+  // Boot-time spinner
   if (initializing) {
+    log('Render: initializing=true → show spinner');
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
+        <span className="loading loading-spinner loading-lg" />
       </div>
-    )
+    );
   }
 
+  log('Render: provide context to children');
   return (
-    <AuthContext.Provider value={{
-      user,
-      profile,
-      loading,
-      signUp,
-      signIn,
-      signOut,
-      refreshProfile,
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        loading,
+        signUp,
+        signIn,
+        signOut,
+        refreshProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    // This error helps you catch "hook used outside provider" bugs quickly.
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
+  return context;
 }

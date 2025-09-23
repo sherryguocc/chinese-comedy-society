@@ -22,11 +22,36 @@ export const PERMISSIONS = {
 } as const
 
 export function hasPermission(userRole: UserRole | null, permission: keyof typeof PERMISSIONS): boolean {
-  if (!userRole) return false
+  const debug = process.env.NODE_ENV === 'development'
+  
+  if (debug) {
+    console.log('[Permissions] hasPermission check:', {
+      userRole,
+      userRoleType: typeof userRole,
+      permission,
+      allowedRoles: PERMISSIONS[permission]
+    })
+  }
+  
+  if (!userRole) {
+    if (debug) console.log('[Permissions] hasPermission: no userRole, returning false')
+    return false
+  }
   
   // 确保角色名称是小写
   const normalizedRole = userRole.toLowerCase() as UserRole
-  return PERMISSIONS[permission].includes(normalizedRole)
+  const result = PERMISSIONS[permission].includes(normalizedRole)
+  
+  if (debug) {
+    console.log('[Permissions] hasPermission result:', {
+      originalRole: userRole,
+      normalizedRole,
+      result,
+      includes: PERMISSIONS[permission].includes(normalizedRole)
+    })
+  }
+  
+  return result
 }
 
 export function requirePermission(userRole: UserRole | null, permission: keyof typeof PERMISSIONS): void {
@@ -38,13 +63,4 @@ export function requirePermission(userRole: UserRole | null, permission: keyof t
 // 角色验证函数
 export function isValidRole(role: string): role is UserRole {
   return ['guest', 'member', 'admin'].includes(role.toLowerCase())
-}
-
-// 标准化角色名称
-export function normalizeRole(role: string): UserRole {
-  const normalized = role.toLowerCase()
-  if (isValidRole(normalized)) {
-    return normalized
-  }
-  return 'guest' // 默认返回guest
 }

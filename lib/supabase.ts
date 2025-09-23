@@ -12,8 +12,6 @@ if (!supabaseAnonKey) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
 }
 
-// 添加调试信息
-console.log('Supabase Anon Key exists:', !!supabaseAnonKey)
 
 // Regular client for client-side operations (respects RLS)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

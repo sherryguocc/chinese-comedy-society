@@ -9,7 +9,6 @@ export interface Profile {
   phone_number?: string
   role: UserRole // 必须是小写的 'guest', 'member', 或 'admin'
   created_at: string
-  updated_at?: string
 }
 
 export interface Post {
@@ -19,9 +18,7 @@ export interface Post {
   excerpt?: string // 文章摘要
   author_id: string
   author?: Profile
-  published: boolean
   created_at: string
-  updated_at?: string
 }
 
 export interface File {
@@ -35,20 +32,17 @@ export interface File {
   uploader_id: string
   uploader?: Profile
   created_at: string
-  updated_at?: string
 }
 
 export interface Event {
   id: string
   title: string
   description: string
-  event_date: string
+  start_time: string
   location?: string
-  author_id: string
+  create_by: string
   author?: Profile
   created_at: string
-  updated_at: string
-  published: boolean
 }
 
 export interface Comment {

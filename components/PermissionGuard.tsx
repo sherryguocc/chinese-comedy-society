@@ -43,10 +43,20 @@ export function AdminOnly({
     })
   }
 
-  if (loading || !user) return <>{fallback}</>
-  if (profile?.role !== 'admin') return <>{fallback}</>
+  // 如果没有用户，返回 fallback
+  if (!user) return <>{fallback}</>
+  
+  // 如果有 profile 且角色不是 admin，返回 fallback
+  if (profile && profile.role !== 'admin') return <>{fallback}</>
+  
+  // 如果仍在加载但没有 profile，返回 fallback
+  if (loading && !profile) return <>{fallback}</>
+  
+  // 如果有 profile 且是 admin，显示内容
+  if (profile?.role === 'admin') return <>{children}</>
 
-  return <>{children}</>
+  // 其他情况返回 fallback
+  return <>{fallback}</>
 }
 
 // Member 专用（member 或 admin 可访问）
