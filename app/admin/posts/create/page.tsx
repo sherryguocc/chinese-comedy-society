@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import AdminLayout from '@/components/AdminLayout'
 
 export default function CreatePost() {
@@ -12,6 +12,7 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
+  const supabase = createClientComponentClient()
   
   const [formData, setFormData] = useState({
     title: '',
@@ -173,7 +174,33 @@ export default function CreatePost() {
             hint: error.hint || 'No hint',
             code: error.code || 'No code'
           })
-          throw error
+          
+          // Always try API route as fallback for any error
+          console.log('Direct insert failed, trying API route...')
+          try {
+            const apiResponse = await fetch('/api/admin/create-post', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(insertData)
+            })
+            
+            const apiResult = await apiResponse.json()
+            
+            if (!apiResponse.ok) {
+              throw new Error(apiResult.error || 'API request failed')
+            }
+            
+            console.log('API route success:', apiResult.data)
+            alert(`文章${formData.published ? '发布' : '保存'}成功！ Post ${formData.published ? 'published' : 'saved'} successfully!`)
+            router.push('/admin/dashboard')
+            return
+            
+          } catch (apiError: any) {
+            console.error('API route also failed:', apiError)
+            throw new Error(`Both direct insert and API route failed: ${apiError.message}`)
+          }
         }
 
         if (!data || data.length === 0) {
