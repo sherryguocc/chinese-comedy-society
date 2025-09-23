@@ -12,18 +12,34 @@ if (!supabaseAnonKey) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
 }
 
+// 使用全局变量确保单例模式
+declare global {
+  var __supabase: ReturnType<typeof createClient> | undefined
+  var __supabaseAdmin: ReturnType<typeof createClient> | undefined
+}
 
 // Regular client for client-side operations (respects RLS)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = globalThis.__supabase ?? createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'chinese-comedy-society-auth'
   }
 })
 
+if (process.env.NODE_ENV !== 'production') globalThis.__supabase = supabase
+
 // Admin client for server-side operations only (bypasses RLS)
-export const supabaseAdmin = createClient(
+export const supabaseAdmin = globalThis.__supabaseAdmin ?? createClient(
   supabaseUrl,
-  supabaseServiceRoleKey || supabaseAnonKey
+  supabaseServiceRoleKey || supabaseAnonKey,
+  {
+    auth: {
+      persistSession: false
+    }
+  }
 )
+
+if (process.env.NODE_ENV !== 'production') globalThis.__supabaseAdmin = supabaseAdmin

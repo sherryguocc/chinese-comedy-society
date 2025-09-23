@@ -85,10 +85,12 @@ CREATE TABLE events (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
-  start_date TIMESTAMPTZ NOT NULL,
-  end_date TIMESTAMPTZ NOT NULL,
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ,
   location TEXT,
-  created_by UUID REFERENCES profiles(id) NOT NULL,
+  event_type TEXT DEFAULT 'meetup' CHECK (event_type IN ('show', 'openmic', 'training', 'meetup', 'readingsession')),
+  organiser TEXT DEFAULT '华人喜剧协会',
+  create_by UUID REFERENCES profiles(id) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

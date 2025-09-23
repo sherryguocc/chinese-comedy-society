@@ -18,6 +18,23 @@
     @apply bg-gradient-to-r from-black to-orange-900;
   }
   
+  /* 文本截断样式 */
+  .text-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+  }
+  
+  .text-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+  }
+  
   .primary-orange {
     @apply bg-orange-500 hover:bg-orange-600 text-white;
   }

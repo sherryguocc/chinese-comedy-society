@@ -34,12 +34,18 @@ export interface File {
   created_at: string
 }
 
+// 活动类型
+export type EventType = 'show' | 'openmic' | 'training' | 'meetup' | 'readingsession'
+
 export interface Event {
   id: string
   title: string
   description: string
   start_time: string
+  end_time?: string  // 可选的结束时间
   location?: string
+  event_type: EventType
+  organiser?: string
   create_by: string
   author?: Profile
   created_at: string

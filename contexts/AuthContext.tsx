@@ -5,7 +5,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types/database';
 
-const DEBUG = true; // flip to false to silence logs
+const DEBUG = false; // 暂时禁用调试日志以减少噪音
 const TAG = '[Auth]';
 
 // Small helper to log conditionally
@@ -36,6 +36,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);       // specifically for profile fetching
   const [initializing, setInitializing] = useState(true); // boot-time flag
+
+  // 从本地存储恢复 profile 状态
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cachedProfile = localStorage.getItem('auth_profile')
+      if (cachedProfile) {
+        try {
+          const parsed = JSON.parse(cachedProfile)
+          setProfile(parsed)
+          log('Restored profile from cache:', parsed)
+        } catch (e) {
+          log('Failed to parse cached profile, clearing cache')
+          localStorage.removeItem('auth_profile')
+        }
+      }
+    }
+  }, [])
+
+  // 缓存 profile 到本地存储
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (profile) {
+        localStorage.setItem('auth_profile', JSON.stringify(profile))
+        log('Cached profile to localStorage')
+      } else {
+        localStorage.removeItem('auth_profile')
+        log('Cleared profile cache')
+      }
+    }
+  }, [profile])
 
   // Log state snapshots whenever these change
   useEffect(() => {
@@ -111,12 +141,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // In some cases (TOKEN_REFRESHED) DB triggers may still be running
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          log('onAuthStateChange: wait 500ms to let DB settle');
-          await new Promise((resolve) => setTimeout(resolve, 500));
+        // 避免不必要的profile重新获取
+        if (event === 'SIGNED_IN' || (event === 'TOKEN_REFRESHED' && !profile)) {
+          log('onAuthStateChange: fetching profile for event:', event);
+          if (event === 'SIGNED_IN') {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+          await fetchProfile(session.user.id);
         }
-        await fetchProfile(session.user.id);
       } else {
         // Signed out or session revoked
         log('onAuthStateChange: no user, clear profile');
@@ -130,13 +162,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // 移除profile依赖，避免重复订阅
 
   // Fetch profile with retries
   const fetchProfile = async (userId: string, retryCount = 0) => {
     if (!userId) {
       warn('fetchProfile: called without userId');
-      setLoading(false); // 确保在没有userId时设置loading为false
+      setLoading(false);
       return;
     }
 
@@ -174,14 +206,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!data) {
         if (retryCount < 2) {
-          const delay = 1500;
+          const delay = 1000; // 减少重试延迟
           log(`fetchProfile: not found → retry after ${delay}ms`);
           await new Promise((resolve) => setTimeout(resolve, delay));
           return fetchProfile(userId, retryCount + 1);
         } else {
           warn('fetchProfile: still not found after retries, setProfile(null)');
           setProfile(null);
-          setLoading(false); // 确保在重试失败后设置loading为false
+          setLoading(false);
           return;
         }
       }
@@ -194,14 +226,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         fullData: data 
       });
       setProfile(data);
-      setLoading(false); // 确保在成功时立即设置 loading 为 false
+      setLoading(false);
       log('fetchProfile: profile set, loading=false');
     } catch (err) {
       errorLog('fetchProfile: failure', err);
       setProfile(null);
-      setLoading(false); // 确保在异常时也设置loading为false
+      setLoading(false);
     }
-    // 移除这里的finally，因为我们在每个分支都明确设置了loading状态
   };
 
   const refreshProfile = async () => {

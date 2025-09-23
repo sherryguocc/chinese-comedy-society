@@ -2,11 +2,56 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { AdminOnly, MemberOnly } from '@/components/PermissionGuard'
+import { useState, useEffect } from 'react'
 
 export default function Navbar() {
-  const { user, profile, signOut } = useAuth()
+  const [mounted, setMounted] = useState(false)
+  const { user, profile, signOut, loading } = useAuth()
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // 在组件mounted之前显示简化版本
+  if (!mounted || loading) {
+    return (
+      <div className="navbar bg-gradient-to-r from-black to-orange-900 shadow-lg">
+        <div className="navbar-start">
+          <Link href="/" className="flex items-center space-x-3 px-2">
+            <img 
+              src="/logo.png" 
+              alt="华人喜剧协会 Chinese Comedy Society" 
+              className="logo-circle"
+            />
+            <span className="text-white text-lg font-bold hidden sm:block">
+              华人喜剧协会
+            </span>
+          </Link>
+        </div>
+        
+        <div className="navbar-center hidden lg:flex">
+          <ul className="menu menu-horizontal px-1">
+            <li><Link href="/" className="text-white hover:text-orange-300 border-0">首页 Home</Link></li>
+            <li><Link href="/posts" className="text-white hover:text-orange-300 border-0">文章 Posts</Link></li>
+            <li><Link href="/events" className="text-white hover:text-orange-300 border-0">活动 Events</Link></li>
+          </ul>
+        </div>
+        
+        <div className="navbar-end">
+          <div className="flex gap-2">
+            <Link href="/auth/login" className="btn btn-ghost text-white hover:text-orange-300 border-0">
+              登录 Login
+            </Link>
+            <Link href="/auth/register" className="btn bg-orange-500 hover:bg-orange-600 text-white border-0">
+              注册 Register
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果已登录，显示完整导航
   return (
     <div className="navbar bg-gradient-to-r from-black to-orange-900 shadow-lg">
       <div className="navbar-start">
@@ -19,15 +64,11 @@ export default function Navbar() {
           <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
             <li><Link href="/">首页 Home</Link></li>
             <li><Link href="/posts">文章 Posts</Link></li>
-            <li><Link href="/library">资料库 Library</Link></li>
-            <MemberOnly>
-              <li><Link href="/files">文件库 Files</Link></li>
-            </MemberOnly>
             <li><Link href="/events">活动 Events</Link></li>
             {user && <li><Link href="/profile">个人 Profile</Link></li>}
-            <AdminOnly>
+            {profile?.role === 'admin' && (
               <li><Link href="/admin/dashboard">管理后台 Admin</Link></li>
-            </AdminOnly>
+            )}
           </ul>
         </div>
         <Link href="/" className="flex items-center space-x-3 px-2">
@@ -46,15 +87,11 @@ export default function Navbar() {
         <ul className="menu menu-horizontal px-1">
           <li><Link href="/" className="text-white hover:text-orange-300 border-0">首页 Home</Link></li>
           <li><Link href="/posts" className="text-white hover:text-orange-300 border-0">文章 Posts</Link></li>
-          <li><Link href="/library" className="text-white hover:text-orange-300 border-0">资料库 Library</Link></li>
-          <MemberOnly>
-            <li><Link href="/files" className="text-white hover:text-orange-300 border-0">文件库 Files</Link></li>
-          </MemberOnly>
           <li><Link href="/events" className="text-white hover:text-orange-300 border-0">活动 Events</Link></li>
           {user && <li><Link href="/profile" className="text-white hover:text-orange-300 border-0">个人 Profile</Link></li>}
-          <AdminOnly>
+          {profile?.role === 'admin' && (
             <li><Link href="/admin/dashboard" className="text-white hover:text-orange-300 border-0">管理后台 Admin</Link></li>
-          </AdminOnly>
+          )}
         </ul>
       </div>
       
@@ -75,7 +112,9 @@ export default function Navbar() {
                   {profile?.username && profile?.full_name && (
                     <div className="text-xs text-gray-500">@{profile.username}</div>
                   )}
-                  <div className="badge badge-sm badge-outline">{profile?.role}</div>
+                  {profile?.role && (
+                    <div className="badge badge-sm badge-outline">{profile.role}</div>
+                  )}
                 </span>
               </li>
               <li><Link href="/profile">个人资料 Profile</Link></li>

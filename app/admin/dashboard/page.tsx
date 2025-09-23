@@ -4,14 +4,31 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { Profile } from '@/types/database'
-import AdminLayout from '@/components/AdminLayout'
 import Link from 'next/link'
 
 export default function AdminDashboard() {
-  const { profile } = useAuth()
+  const { profile, loading, user } = useAuth()
   const [users, setUsers] = useState<Profile[]>([])
-  const [loading, setLoading] = useState(true)
+  const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [authTimeout, setAuthTimeout] = useState(false)
+
+  // 添加超时检测
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+    
+    if (loading) {
+      timeout = setTimeout(() => {
+        setAuthTimeout(true)
+      }, 8000) // 8秒超时
+    } else {
+      setAuthTimeout(false)
+    }
+
+    return () => {
+      if (timeout) clearTimeout(timeout)
+    }
+  }, [loading])
 
   useEffect(() => {
     if (profile?.role === 'admin') {
@@ -19,11 +36,78 @@ export default function AdminDashboard() {
     }
   }, [profile])
 
+  // 如果验证超时
+  if (authTimeout) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold text-orange-500">权限验证超时</h1>
+        <p className="mt-4">权限验证超时，请刷新页面重试。</p>
+        <div className="mt-6 space-x-4">
+          <button 
+            onClick={() => window.location.reload()}
+            className="btn btn-primary"
+          >
+            刷新页面 Refresh
+          </button>
+          <Link href="/" className="btn btn-outline">
+            返回首页 Back to Home
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果还在加载
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center min-h-64">
+          <div className="text-center">
+            <span className="loading loading-spinner loading-lg"></span>
+            <p className="mt-4">正在验证权限...</p>
+            
+            {/* 开发模式下显示调试信息 */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="alert alert-info mt-4 max-w-md mx-auto">
+                <div className="text-sm">
+                  <div>Debug: Loading = {loading.toString()}</div>
+                  <div>Debug: Has User = {!!user?.id}</div>
+                  <div>Debug: Profile Role = {profile?.role || 'null'}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果没有用户或不是管理员
+  if (!user || !profile || profile.role !== 'admin') {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>
+        <p className="mt-4">您没有访问管理后台的权限。</p>
+        <p>You don't have permission to access the admin dashboard.</p>
+        <div className="mt-6 space-x-4">
+          <Link href="/" className="btn btn-primary">
+            返回首页 Back to Home
+          </Link>
+          {!user && (
+            <Link href="/auth/login" className="btn btn-outline">
+              登录 Login
+            </Link>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   // Load users for admin
   const fetchUsers = async () => {
     try {
       setError(null)
-      setLoading(true)
+      setDataLoading(true)
 
       console.log('Admin Dashboard: Fetching users...')
       const { data, error } = await supabase
@@ -43,7 +127,7 @@ export default function AdminDashboard() {
       console.error('Admin Dashboard: Fetch users error', error)
       setError(`获取用户列表失败: ${error.message}`)
     } finally {
-      setLoading(false)
+      setDataLoading(false)
     }
   }
 
@@ -81,18 +165,32 @@ export default function AdminDashboard() {
     }
   }
 
-  if (profile?.role !== 'admin') {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>
-        <p className="mt-4">您没有访问管理后台的权限。</p>
-        <p>You don't have permission to access the admin dashboard.</p>
-      </div>
-    )
-  }
-
   return (
-    <AdminLayout>
+    <div className="container mx-auto px-4 py-8">
+      {/* 管理后台头部 */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">管理后台 Admin Dashboard</h1>
+        
+        <div className="flex gap-4">
+          <Link href="/admin/posts/create" className="btn primary-orange">
+            发布文章 Create Post
+          </Link>
+          <Link href="/admin/events/create" className="btn bg-black hover:bg-gray-800 text-white">
+            创建活动 Create Event
+          </Link>
+          <Link href="/admin/files" className="btn bg-orange-600 hover:bg-orange-700 text-white">
+            文件管理 File Management
+          </Link>
+        </div>
+      </div>
+
+      {/* 面包屑导航 */}
+      <div className="text-sm breadcrumbs mb-6">
+        <ul>
+          <li><Link href="/">首页</Link></li>
+          <li className="text-base-content/60">管理后台</li>
+        </ul>
+      </div>
       
 
       {/* User management */}
@@ -105,7 +203,7 @@ export default function AdminDashboard() {
             <div className="alert alert-info mb-4">
               <div className="text-sm">
                 <div>Debug: Users Array Length = {users.length}</div>
-                <div>Debug: Loading = {loading.toString()}</div>
+                <div>Debug: Data Loading = {dataLoading.toString()}</div>
                 <div>Debug: Error = {error || 'null'}</div>
                 <div>Debug: Profile Role = {profile?.role}</div>
               </div>
@@ -117,7 +215,7 @@ export default function AdminDashboard() {
               <span>{error}</span>
               <button onClick={fetchUsers} className="btn btn-sm">重试 Retry</button>
             </div>
-          ) : loading ? (
+          ) : dataLoading ? (
             <div className="flex justify-center py-8">
               <span className="loading loading-spinner loading-lg"></span>
             </div>
@@ -221,7 +319,7 @@ export default function AdminDashboard() {
           <div className="stat-value">{users.filter(u => u.role === 'guest').length}</div>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   )
 }
 

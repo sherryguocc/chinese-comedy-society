@@ -1,14 +1,34 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { Event } from '@/types/database'
-import { AdminOnly } from '@/components/PermissionGuard'
+import { Event, EventType } from '@/types/database'
+import EventCalendar from '@/components/EventCalendar'
+
+// 活动类型中文名称
+const EVENT_TYPE_NAMES: Record<EventType, string> = {
+  show: '演出Show',
+  openmic: '开放麦Open Mic',
+  training: '培训Training',
+  meetup: '聚会Meetup',
+  readingsession: '读稿会Discussion Session'
+}
+
+// 活动类型图标
+const EVENT_TYPE_ICONS: Record<EventType, string> = {
+  show: '🎭',
+  openmic: '🎤',
+  training: '📚',
+  meetup: '👥',
+  readingsession: '📖'
+}
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>()
+  const [selectedEvents, setSelectedEvents] = useState<Event[]>([])
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
 
   useEffect(() => {
     fetchEvents()
@@ -16,117 +36,252 @@ export default function EventsPage() {
 
   const fetchEvents = async () => {
     try {
+      setLoading(true)
       const { data, error } = await supabase
         .from('events')
-        .select(`
-          *,
-          author:profiles(*)
-        `)
-        .eq('published', true)
-        .order('event_date', { ascending: true })
+        .select('*')
+        .order('start_time', { ascending: true })
 
       if (error) throw error
+      
+      console.log('Fetched events:', data)
       setEvents(data || [])
-    } catch (error) {
+    } catch (error: any) {
       console.error('获取活动失败 Error fetching events:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const formatEventDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return {
-      date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const handleDateClick = (date: Date, dayEvents: Event[]) => {
+    setSelectedDate(date)
+    setSelectedEvents(dayEvents)
+  }
+
+  const formatEventTime = (startTime: string, endTime?: string) => {
+    // 将数据库时间字符串作为本地时间处理
+    // 移除时区信息，将其作为本地时间解析
+    const parseAsLocalTime = (timeStr: string) => {
+      // 移除时区信息 (+00, Z, 等)
+      let cleanTimeStr = timeStr.replace(/[\+\-]\d{2}:?\d{2}$/, '').replace(/Z$/, '')
+      
+      // 确保格式为 YYYY-MM-DDTHH:mm:ss
+      if (cleanTimeStr.includes(' ')) {
+        cleanTimeStr = cleanTimeStr.replace(' ', 'T')
+      }
+      
+      // 添加秒如果缺失
+      if (!cleanTimeStr.includes(':') || cleanTimeStr.split(':').length < 3) {
+        if (cleanTimeStr.split(':').length === 2) {
+          cleanTimeStr += ':00'
+        }
+      }
+      
+      return new Date(cleanTimeStr)
     }
+
+    const start = parseAsLocalTime(startTime)
+    const startStr = start.toLocaleDateString('zh-CN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+
+    if (endTime) {
+      const end = parseAsLocalTime(endTime)
+      const endStr = end.toLocaleDateString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+      return `${startStr} - ${endStr}`
+    }
+
+    return startStr
+  }
+
+  const isUpcoming = (startTime: string) => {
+    return new Date(startTime) > new Date()
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">
-          活动列表 Events
-        </h1>
-        <AdminOnly>
-          <Link href="/admin/events/create" className="btn primary-orange">
-            创建活动 Create Event
-          </Link>
-        </AdminOnly>
+      {/* 页面标题和视图切换 */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">活动日历 Events Calendar</h1>
+          <p className="text-base-content/60">
+            查看华人喜剧协会的活动安排
+          </p>
+        </div>
+        
+        <div className="tabs tabs-boxed">
+          <button 
+            className={`tab ${viewMode === 'calendar' ? 'tab-active' : ''}`}
+            onClick={() => setViewMode('calendar')}
+          >
+            📅 日历视图
+          </button>
+          <button 
+            className={`tab ${viewMode === 'list' ? 'tab-active' : ''}`}
+            onClick={() => setViewMode('list')}
+          >
+            📋 列表视图
+          </button>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="card bg-base-100 shadow-xl">
-              <div className="card-body">
-                <div className="skeleton h-6 w-48"></div>
-                <div className="skeleton h-20 w-full"></div>
-                <div className="skeleton h-4 w-32"></div>
+      {viewMode === 'calendar' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 日历组件 */}
+          <div className="lg:col-span-2">
+            <EventCalendar 
+              events={events}
+              onDateClick={handleDateClick}
+              selectedDate={selectedDate}
+            />
+          </div>
+          
+          {/* 选中日期的活动详情 */}
+          <div className="lg:col-span-1">
+            {selectedDate ? (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-bold mb-4">
+                  {selectedDate.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                  })}
+                </h3>
+                
+                {selectedEvents.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedEvents.map((event) => (
+                      <div key={event.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl">
+                            {EVENT_TYPE_ICONS[event.event_type]}
+                          </span>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm">{event.title}</h4>
+                            <p className="text-xs text-gray-600 mb-2">
+                              {EVENT_TYPE_NAMES[event.event_type]}
+                            </p>
+                            <p className="text-xs text-gray-500 mb-1">
+                              ⏰ {formatEventTime(event.start_time, event.end_time)}
+                            </p>
+                            {event.location && (
+                              <p className="text-xs text-gray-500 mb-1">
+                                📍 {event.location}
+                              </p>
+                            )}
+                            {event.organiser && (
+                              <p className="text-xs text-gray-500 mb-2">
+                                👤 {event.organiser}
+                              </p>
+                            )}
+                            {event.description && (
+                              <p className="text-xs text-gray-700 text-clamp-2">
+                                {event.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="text-4xl mb-2">📅</div>
+                    <p>这一天没有活动安排</p>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            ) : (
+              <div className="bg-white rounded-lg shadow-lg p-6 text-center text-gray-500">
+                <div className="text-4xl mb-2">👆</div>
+                <p>点击日历上的日期查看当天活动</p>
+              </div>
+            )}
+          </div>
         </div>
-      ) : events.length > 0 ? (
+      ) : (
+        /* 列表视图 */
         <div className="space-y-6">
-          {events.map((event) => {
-            const eventDate = formatEventDate(event.start_time)
-            const isUpcoming = new Date(event.start_time) > new Date()
-            
-            return (
-              <div key={event.id} className={`card bg-base-100 shadow-xl ${isUpcoming ? 'border-l-4 border-orange-500' : ''}`}>
+          {events.length > 0 ? (
+            events.map((event) => (
+              <div key={event.id} className={`card bg-base-100 shadow-xl ${isUpcoming(event.start_time) ? 'border-l-4 border-orange-500' : ''}`}>
                 <div className="card-body">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <h2 className="card-title text-xl mb-2">
-                        {event.title}
-                        {isUpcoming && (
-                          <div className="badge badge-primary">即将举行 Upcoming</div>
-                        )}
-                      </h2>
-                      <p className="text-base-content/70 mb-4">
-                        {event.description}
-                      </p>
-                      <div className="flex flex-wrap gap-4 text-sm text-base-content/60">
-                        <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          {eventDate.date} {eventDate.time}
-                        </div>
-                        {event.location && (
-                          <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {event.location}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                          创建者: {event.author?.full_name || event.author?.email}
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-3xl">
+                          {EVENT_TYPE_ICONS[event.event_type]}
+                        </span>
+                        <div>
+                          <h2 className="card-title text-xl">{event.title}</h2>
+                          <span className="badge badge-outline">
+                            {EVENT_TYPE_NAMES[event.event_type]}
+                          </span>
                         </div>
                       </div>
+                      
+                      <div className="text-sm text-base-content/70 space-y-1 mb-3">
+                        <div className="flex items-center gap-2">
+                          <span>⏰</span>
+                          <span>{formatEventTime(event.start_time, event.end_time)}</span>
+                          {isUpcoming(event.start_time) && (
+                            <span className="badge badge-success badge-sm">即将举行</span>
+                          )}
+                        </div>
+                        
+                        {event.location && (
+                          <div className="flex items-center gap-2">
+                            <span>📍</span>
+                            <span>{event.location}</span>
+                          </div>
+                        )}
+                        
+                        {event.organiser && (
+                          <div className="flex items-center gap-2">
+                            <span>👤</span>
+                            <span>{event.organiser}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {event.description && (
+                        <p className="text-base-content/80 text-sm text-clamp-3">
+                          {event.description}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            )
-          })}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-base-content/60 mb-4">
-            暂无活动 No Events Yet
-          </h2>
-          <p className="text-base-content/50">
-            还没有安排任何活动，请稍后再来查看。
-            <br />
-            No events have been scheduled yet. Please check back later.
-          </p>
+            ))
+          ) : (
+            <div className="text-center py-12 bg-base-200 rounded-lg">
+              <div className="text-6xl mb-4">📅</div>
+              <h3 className="text-xl font-bold mb-2">暂无活动</h3>
+              <p className="text-base-content/60">
+                目前还没有安排任何活动，请稍后再来查看。
+                <br />
+                No events scheduled yet. Please check back later.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
