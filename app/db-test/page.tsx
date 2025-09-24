@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -9,7 +9,29 @@ export default function DatabaseTestPage() {
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [currentTest, setCurrentTest] = useState('')
+  const [mounted, setMounted] = useState(false)
   const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // 防止 hydration 错误
+  if (!mounted) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Database Connection Test</h1>
+        <div className="mb-6 space-y-4">
+          <div className="alert alert-info">
+            <div>
+              <h3 className="font-bold">Current Status:</h3>
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const runTests = async () => {
     setLoading(true)

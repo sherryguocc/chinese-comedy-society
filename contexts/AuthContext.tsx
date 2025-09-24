@@ -18,6 +18,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+  
   // 在初始化时检查localStorage
   const getInitialUser = (): User | null => {
     if (typeof window === 'undefined') return null;
@@ -39,11 +41,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const [user, setUser] = useState<User | null>(getInitialUser);
-  const [profile, setProfile] = useState<Profile | null>(getInitialProfile);
-  // 如果有缓存的用户数据，初始loading为false，否则为true
-  const [loading, setLoading] = useState(!getInitialUser());
+  const [user, setUser] = useState<User | null>(null); // 服务端渲染时始终为 null
+  const [profile, setProfile] = useState<Profile | null>(null); // 服务端渲染时始终为 null
+  const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(true);
+
+  // 组件挂载后初始化用户状态
+  useEffect(() => {
+    setMounted(true)
+    // 客户端挂载后才设置缓存的用户状态
+    setUser(getInitialUser())
+    setProfile(getInitialProfile())
+    setLoading(!getInitialUser())
+  }, [])
 
   // 防抖函数，避免频繁的会话检查
   const debounce = (func: Function, wait: number) => {
