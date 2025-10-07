@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { ReactNode, useEffect, useState } from 'react'
 import AdminNavigation from './AdminNavigation'
+import { isAdmin } from '@/lib/permissions'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -16,7 +17,7 @@ export default function AdminLayout({
   title = "管理后台 Admin Dashboard",
   showBackButton = false 
 }: AdminLayoutProps) {
-  const { profile, loading, refreshProfile, user } = useAuth()
+  const { userRole, loading, refreshProfile, user, admin, profile } = useAuth()
   const [timeoutReached, setTimeoutReached] = useState(false)
 
   // 添加超时机制 - 5秒后如果还在loading就显示错误
@@ -51,8 +52,11 @@ export default function AdminLayout({
                 <div className="text-sm">
                   <div>Debug: Loading = {loading.toString()}</div>
                   <div>Debug: Has User = {!!user?.id}</div>
-                  <div>Debug: Profile Role = {profile?.role || 'null'}</div>
-                  <div>Debug: User Email = {profile?.email || 'null'}</div>
+                  <div>Debug: User Role = {userRole || 'null'}</div>
+                  <div>Debug: Has User = {!!user?.id}</div>
+                  <div>Debug: Is Admin = {isAdmin(userRole).toString()}</div>
+                  <div>Debug: Admin Data = {admin ? 'exists' : 'null'}</div>
+                  <div>Debug: Profile Data = {profile ? 'exists' : 'null'}</div>
                 </div>
               </div>
             )}
@@ -96,8 +100,9 @@ export default function AdminLayout({
           <div className="alert alert-info mt-4 max-w-md mx-auto">
             <div className="text-sm">
               <div>Debug: Timeout Reached = {timeoutReached.toString()}</div>
+              <div>Debug: User Role = {userRole || 'null'}</div>
               <div>Debug: Has User = {!!user?.id}</div>
-              <div>Debug: Profile Role = {profile?.role || 'null'}</div>
+              <div>Debug: Is Admin = {isAdmin(userRole).toString()}</div>
               <div>Debug: Loading = {loading.toString()}</div>
             </div>
           </div>
@@ -107,7 +112,7 @@ export default function AdminLayout({
   }
 
   // 如果不是管理员，显示权限不足
-  if (!profile || profile.role !== 'admin') {
+  if (!isAdmin(userRole)) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold text-red-500">
@@ -126,7 +131,8 @@ export default function AdminLayout({
         {process.env.NODE_ENV === 'development' && (
           <div className="alert alert-info mt-4 max-w-md mx-auto">
             <div className="text-sm">
-              <div>Debug: Profile Role = {profile?.role || 'null'}</div>
+              <div>Debug: User Role = {userRole || 'null'}</div>
+              <div>Debug: Is Admin = {isAdmin(userRole).toString()}</div>
               <div>Debug: Loading = {loading.toString()}</div>
               <div>Debug: Has User = {!!user?.id}</div>
             </div>

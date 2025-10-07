@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useState, useEffect } from 'react'
+import { isAdmin } from '@/lib/permissions'
 
 export default function Navbar() {
   const [mounted, setMounted] = useState(false)
-  const { user, profile, signOut, loading } = useAuth()
+  const { user, profile, admin, userRole, signOut, loading } = useAuth()
 
   useEffect(() => {
     setMounted(true)
@@ -63,7 +64,7 @@ export default function Navbar() {
             <li><Link href="/posts">文章 Posts</Link></li>
             <li><Link href="/events">活动 Events</Link></li>
             <li><Link href="/library">资料库 Library</Link></li>
-            {profile?.role === 'admin' && (
+            {isAdmin(userRole) && (
               <li><Link href="/admin/dashboard">管理后台 Admin</Link></li>
             )}
           </ul>
@@ -86,7 +87,7 @@ export default function Navbar() {
           <li><Link href="/posts" className="text-white hover:text-orange-300 border-0">文章 Posts</Link></li>
           <li><Link href="/events" className="text-white hover:text-orange-300 border-0">活动 Events</Link></li>
           <li><Link href="/library" className="text-white hover:text-orange-300 border-0">资料库 Library</Link></li>
-          {profile?.role === 'admin' && (
+          {isAdmin(userRole) && (
             <li><Link href="/admin/dashboard" className="text-white hover:text-orange-300 border-0">管理后台 Admin</Link></li>
           )}
         </ul>
@@ -103,6 +104,7 @@ export default function Navbar() {
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar border-0">
               <div className="w-10 rounded-full bg-orange-500 text-white flex items-center justify-center">
                 {(() => {
+                  if (admin?.full_name) return admin.full_name[0].toUpperCase();
                   if (profile?.full_name) return profile.full_name[0].toUpperCase();
                   if (profile?.username) return profile.username[0].toUpperCase();
                   if (user?.email) return user.email[0].toUpperCase();
@@ -115,17 +117,26 @@ export default function Navbar() {
                 <span className="text-sm">
                   <div className="font-semibold">
                     {(() => {
+                      if (admin?.full_name) return admin.full_name;
                       if (profile?.full_name) return profile.full_name;
                       if (profile?.username) return profile.username;
                       if (user?.email) return user.email.split('@')[0];
                       return 'User';
                     })()}
                   </div>
-                  {profile?.username && profile?.full_name && (
+                  {profile?.username && (profile?.full_name || admin?.full_name) && (
                     <div className="text-xs text-gray-500">@{profile.username}</div>
                   )}
-                  {profile?.role && (
-                    <div className="badge badge-sm badge-outline">{profile.role}</div>
+                  {userRole && (
+                    <div className={`badge badge-sm ${
+                      userRole === 'super_admin' ? 'badge-error' : 
+                      userRole === 'admin' ? 'badge-warning' : 
+                      'badge-outline'
+                    }`}>
+                      {userRole === 'super_admin' ? '超级管理员' : 
+                       userRole === 'admin' ? '管理员' : 
+                       userRole === 'member' ? '会员' : '访客'}
+                    </div>
                   )}
                 </span>
               </li>

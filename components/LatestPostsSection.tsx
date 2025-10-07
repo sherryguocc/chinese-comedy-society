@@ -24,7 +24,7 @@ export default function LatestPostsSection({ initialPosts }: LatestPostsSectionP
         .from('posts')
         .select(`
           *,
-          author:profiles(*)
+          author:profiles(id, email, username, full_name, phone_number, role, created_at)
         `)
         .order('created_at', { ascending: false })
         .limit(5)

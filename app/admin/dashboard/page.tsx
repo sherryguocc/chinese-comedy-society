@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { Profile } from '@/types/database'
+import { isAdmin } from '@/lib/permissions'
 import Link from 'next/link'
 
 export default function AdminDashboard() {
-  const { profile, loading, user } = useAuth()
+  const { userRole, loading, user } = useAuth()
   const [users, setUsers] = useState<Profile[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,17 +41,17 @@ export default function AdminDashboard() {
   useEffect(() => {
     console.log('Admin Dashboard: Auth state changed', {
       user: user?.id,
-      profile: profile?.role,
+      userRole: userRole,
       loading,
       fetchAttempted
     })
     
-    if (!loading && profile?.role === 'admin' && !fetchAttempted) {
+    if (!loading && isAdmin(userRole) && !fetchAttempted) {
       console.log('Admin Dashboard: User is admin, fetching users...')
       setFetchAttempted(true)
       fetchUsers()
     }
-  }, [profile?.role, loading, fetchAttempted]) // 只依赖 role 和 loading 状态
+  }, [userRole, loading, fetchAttempted]) // 只依赖 userRole 和 loading 状态
 
   // 修复 Supabase 查询
   const fetchUsers = async () => {
@@ -122,7 +123,7 @@ export default function AdminDashboard() {
                 <div className="text-sm">
                   <div>Debug: Loading = {loading.toString()}</div>
                   <div>Debug: Has User = {!!user?.id}</div>
-                  <div>Debug: Profile Role = {profile?.role || 'null'}</div>
+                  <div>Debug: User Role = {userRole || 'null'}</div>
                 </div>
               </div>
             )}
@@ -133,7 +134,7 @@ export default function AdminDashboard() {
   }
 
   // 如果没有用户或不是管理员
-  if (!user || !profile || profile.role !== 'admin') {
+  if (!user || !isAdmin(userRole)) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>
@@ -232,7 +233,7 @@ export default function AdminDashboard() {
                 <div>Debug: Users Array Length = {users.length}</div>
                 <div>Debug: Data Loading = {dataLoading.toString()}</div>
                 <div>Debug: Error = {error || 'null'}</div>
-                <div>Debug: Profile Role = {profile?.role}</div>
+                <div>Debug: User Role = {userRole}</div>
               </div>
             </div>
           )}

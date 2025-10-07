@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { File } from '@/types/database'
 
 export default function LibraryPage() {
-  const { user, profile } = useAuth()
+  const { user, profile, userRole } = useAuth()
   const [files, setFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -22,7 +22,7 @@ export default function LibraryPage() {
       const query = withUploader
         ? base.select(`
             id, title, description, file_name, file_size, created_at, path,
-            uploader:profiles(id, full_name, avatar_url)
+            uploader:profiles(id, full_name)
           `)
         : base.select(`id, title, description, file_name, file_size, created_at, path`)
 
@@ -63,7 +63,7 @@ export default function LibraryPage() {
 
   const downloadFile = async (filePath: string, fileName: string) => {
     // 权限检查（Only members can download）
-    if (!user || !profile || !['member', 'admin'].includes(profile.role)) {
+    if (!user || !userRole || !['member', 'admin', 'super_admin'].includes(userRole)) {
       alert('只有会员才能下载文件，请联系管理员升级账户 / Only members can download files, please contact admin to upgrade your account')
       return
     }
@@ -94,7 +94,8 @@ export default function LibraryPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const isMember = user && profile && ['member', 'admin'].includes(profile.role)
+  // 使用 userRole 而不是 profile.role，因为管理员的 userRole 是 'super_admin'
+  const isMember = user && userRole && ['member', 'admin', 'super_admin'].includes(userRole)
 
   const filteredFiles = files.filter((file) =>
     (file.title ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,9 +111,11 @@ export default function LibraryPage() {
           <div className="badge badge-outline">
             {!user
               ? '访客 Guest'
-              : profile?.role === 'admin'
+              : userRole === 'super_admin'
+              ? '超级管理员 Super Admin'
+              : userRole === 'admin'
               ? '管理员 Admin'
-              : profile?.role === 'member'
+              : userRole === 'member'
               ? '会员 Member'
               : '访客 Guest'}
           </div>

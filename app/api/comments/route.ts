@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       .from('comments')
       .select(`
         *,
-        author:profiles(*)
+        author:profiles(id, email, username, full_name, phone_number, role, created_at)
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: true })
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       })
       .select(`
         *,
-        author:profiles(*)
+        author:profiles(id, email, username, full_name, phone_number, role, created_at)
       `)
       .single()
 

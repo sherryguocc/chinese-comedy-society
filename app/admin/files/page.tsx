@@ -47,7 +47,7 @@ export default function FileManagementPage() {
         .from('files')
         .select(`
           *,
-          uploader:profiles(*)
+          uploader:profiles(id, email, username, full_name, phone_number, role, created_at)
         `)
         .order('created_at', { ascending: false })
 

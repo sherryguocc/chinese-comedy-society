@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { EventType } from '@/types/database'
+import { isAdmin } from '@/lib/permissions'
 import Link from 'next/link'
 import AdminLayout from '@/components/AdminLayout'
 
@@ -18,7 +19,7 @@ const EVENT_TYPE_OPTIONS: { value: EventType; label: string; icon: string; descr
 ]
 
 export default function CreateEvent() {
-  const { profile, loading, user } = useAuth()
+  const { userRole, loading, user, admin } = useAuth()
   const router = useRouter()
   const [submitLoading, setSubmitLoading] = useState(false)
   const [authTimeout, setAuthTimeout] = useState(false)
@@ -51,7 +52,7 @@ export default function CreateEvent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!profile?.id) {
+    if (!user?.id) {
       alert('用户信息未加载，请刷新页面重试')
       return
     }
@@ -72,11 +73,15 @@ export default function CreateEvent() {
         location: formData.location,
         event_type: formData.event_type,
         organiser: formData.organiser,
-        create_by: profile.id
+        create_by: user.id
       }
 
       console.log('Creating event with data:', eventData)
-      console.log('Profile info:', { id: profile.id, role: profile.role, email: profile.email })
+      console.log('Admin info:', { 
+        id: admin?.id || user.id, 
+        role: userRole, 
+        email: admin?.email || user.email 
+      })
 
       // 添加超时控制的数据库操作
       const insertPromise = supabase
@@ -165,7 +170,7 @@ export default function CreateEvent() {
   }
 
   // 如果没有用户或不是管理员
-  if (!user || !profile || profile.role !== 'admin') {
+  if (!user || !isAdmin(userRole)) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>

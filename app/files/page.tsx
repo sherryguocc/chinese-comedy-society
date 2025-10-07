@@ -7,16 +7,16 @@ import { File } from '@/types/database'
 import { MemberOnly, AdminOnly } from '@/components/PermissionGuard'
 
 export default function FilesViewPage() {
-  const { user, profile } = useAuth()
+  const { user, profile, userRole } = useAuth()
   const [files, setFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (profile?.role === 'member' || profile?.role === 'admin') {
+    if (userRole === 'member' || userRole === 'admin' || userRole === 'super_admin') {
       fetchFiles()
     }
-  }, [profile])
+  }, [userRole])
 
   const fetchFiles = async () => {
     try {
@@ -25,7 +25,7 @@ export default function FilesViewPage() {
         .from('files')
         .select(`
           *,
-          uploader:profiles(*)
+          uploader:profiles(id, email, username, full_name, phone_number, role, created_at)
         `)
         .order('created_at', { ascending: false })
 
@@ -125,7 +125,7 @@ export default function FilesViewPage() {
         <h1 className="text-3xl font-bold">文件库 Files</h1>
         <div className="flex items-center gap-4">
           <div className="badge badge-outline">
-            {profile?.role === 'admin' ? '管理员' : profile?.role === 'member' ? '会员' : '访客'}
+            {userRole === 'super_admin' ? '超级管理员' : userRole === 'admin' ? '管理员' : userRole === 'member' ? '会员' : '访客'}
           </div>
           <AdminOnly>
             <a href="/admin/files" className="btn btn-primary btn-sm">
@@ -186,7 +186,7 @@ export default function FilesViewPage() {
           <div className="alert alert-info mb-6">
             <div className="text-sm">
               <div><strong>权限测试信息:</strong></div>
-              <div>当前角色: {profile?.role}</div>
+              <div>当前角色: {userRole}</div>
               <div>文件数量: {files.length}</div>
               <div>加载状态: {loading ? '加载中' : '已完成'}</div>
             </div>
@@ -270,3 +270,11 @@ export default function FilesViewPage() {
     </div>
   )
 }
+ 
+ T u e s d a y ,   O c t o b e r   7 ,   2 0 2 5   3 : 1 1 : 1 3   P M 
+ 
+ 
+ 
+ 
+ 
+ 

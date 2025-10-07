@@ -24,7 +24,7 @@ export default function PostDetailPage() {
         .from('posts')
         .select(`
           *,
-          author:profiles(*)
+          author:profiles(id, email, username, full_name, phone_number, role, created_at)
         `)
         .eq('id', id)
         // 暂时移除 published 过滤，直到数据库表更新
