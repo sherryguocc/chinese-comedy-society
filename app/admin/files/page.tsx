@@ -35,9 +35,7 @@ export default function FileManagementPage() {
   const maxFileSize = 50 * 1024 * 1024 // 50MB
 
   useEffect(() => {
-    if (profile?.role === 'admin') {
       fetchFiles()
-    }
   }, [profile])
 
   const fetchFiles = async () => {

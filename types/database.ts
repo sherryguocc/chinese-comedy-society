@@ -83,3 +83,57 @@ export interface Comment {
   author?: Profile
   created_at: string
 }
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: Profile
+        Insert: Omit<Profile, 'id' | 'created_at'> & { id?: string }  // 插入时 id 可选
+        Update: Partial<Profile>
+      }
+      admins: {
+        Row: Admin
+        Insert: {
+          id?: string
+          email: string
+          full_name?: string
+          is_super_admin: boolean
+          permissions: AdminPermissions
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          email?: string
+          full_name?: string
+          is_super_admin?: boolean
+          permissions?: AdminPermissions
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      posts: {
+        Row: Post
+        Insert: Omit<Post, 'id' | 'created_at'>
+        Update: Partial<Post>
+      }
+      files: {
+        Row: File
+        Insert: Omit<File, 'id' | 'created_at'>
+        Update: Partial<File>
+      }
+      events: {
+        Row: Event
+        Insert: Omit<Event, 'id' | 'created_at'>
+        Update: Partial<Event>
+      }
+      comments: {
+        Row: Comment
+        Insert: Omit<Comment, 'id' | 'created_at'>
+        Update: Partial<Comment>
+      }
+    }
+  }
+}
+}

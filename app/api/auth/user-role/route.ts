@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { Database } from '@/types/database'
+
+// ✅ 从 Database 泛型中取出 admin 表的 Row 类型
+type AdminRow = Database['public']['Tables']['admins']['Row']
+type ProfileRow = Database['public']['Tables']['profiles']['Row']
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,7 +62,10 @@ export async function GET(request: NextRequest) {
       .from('admins')
       .select('*')
       .eq('id', userId)
-      .maybeSingle()
+      .maybeSingle() as { 
+        data: AdminRow | null
+        error: any
+      }
 
     console.log('[API] Admin query result:', { 
       hasAdminData: !!adminData, 
@@ -83,7 +92,10 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .maybeSingle()
+      .maybeSingle() as { 
+        data: ProfileRow | null
+        error: any
+      }
 
     console.log('[API] Profile query result:', { 
       hasProfileData: !!profileData, 

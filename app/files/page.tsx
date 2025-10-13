@@ -270,11 +270,3 @@ export default function FilesViewPage() {
     </div>
   )
 }
- 
- T u e s d a y ,   O c t o b e r   7 ,   2 0 2 5   3 : 1 1 : 1 3   P M 
- 
- 
- 
- 
- 
- 

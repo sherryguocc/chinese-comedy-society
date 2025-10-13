@@ -1,4 +1,5 @@
-import type { Metadata } from 'next'
+'use client'
+
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -10,11 +11,6 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: '华人喜剧协会 Chinese Comedy Society',
-  description: 'A bilingual community for comedy enthusiasts | 喜剧爱好者的双语社区',
-}
 
 export default function RootLayout({
   children,
