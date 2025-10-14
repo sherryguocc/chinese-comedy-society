@@ -1,186 +1,157 @@
 'use client'
-
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { MemberOnly } from '@/components/PermissionGuard'
+import { canDownload } from '@/lib/permissions'
+import { File } from '@/types/database'
 
-export default function ProfilePage() {
-  const { user, profile, refreshProfile } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    full_name: '',
-    username: '',
-    phone_number: '',
-    email: ''
-  })
+export default function FilesPage() {
+  const { user, userRole } = useAuth()
+  const [files, setFiles] = useState<File[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (profile) {
-      setFormData({
-        full_name: profile.full_name || '',
-        username: profile.username || '',
-        phone_number: profile.phone_number || '',
-        email: profile.email || ''
-      })
-    }
-  }, [profile])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user?.id) return
-
-    setLoading(true)
+  const fetchFiles = async () => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        // @ts-ignore - Temporary fix for Supabase type inference
-        .update({
-          full_name: formData.full_name || null,
-          username: formData.username || null,
-          phone_number: formData.phone_number || null,
-        })
-        .eq('id', user.id)
+      setError(null)
+      setLoading(true)
+
+      const { data, error } = await supabase
+        .from('files')
+        .select(`
+          *,
+          uploader:profiles(id, full_name, role)
+        `)
+        .order('created_at', { ascending: false })
 
       if (error) throw error
-
-      await refreshProfile()
-      alert('个人资料更新成功！Profile updated successfully!')
-    } catch (error: any) {
-      console.error('更新个人资料失败:', error)
-      alert(`更新失败 Update failed: ${error.message}`)
+      setFiles(data || [])
+    } catch (e: any) {
+      console.error('Error fetching files:', e)
+      setError(`获取文件列表失败: ${e.message}`)
     } finally {
       setLoading(false)
     }
   }
 
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold">请先登录</h1>
-        <p>Please login to view your profile.</p>
-      </div>
-    )
+  const handleDownload = async (file: File) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('files')
+        .download(file.path)
+
+      if (error) throw error
+
+      const url = URL.createObjectURL(data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = file.file_name
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      console.error('Error downloading file:', e)
+      alert(`下载失败: ${e.message}`)
+    }
+  }
+
+  useEffect(() => {
+    fetchFiles()
+  }, [])
+
+  const getRoleDisplayName = (role: string) => {
+    const roleNames = {
+      guest: '访客',
+      member: '会员', 
+      admin: '管理员',
+      super_admin: '超级管理员'
+    }
+    return roleNames[role as keyof typeof roleNames] || role
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="card bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h1 className="card-title text-2xl mb-6">
-            个人资料 Personal Profile
-          </h1>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 用户头像区域 */}
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="avatar">
-                <div className="w-20 h-20 rounded-full bg-orange-500 text-white flex items-center justify-center text-2xl">
-                  {formData.full_name?.[0] || formData.username?.[0] || formData.email?.[0] || 'U'}
-                </div>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">
-                  {formData.full_name || formData.username || '未设置姓名'}
-                </h2>
-                <div className="badge badge-outline">{profile?.role}</div>
-              </div>
-            </div>
-
-            {/* 邮箱 (只读) */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">邮箱 Email</span>
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                className="input input-bordered bg-gray-100"
-                disabled
-              />
-              <label className="label">
-                <span className="label-text-alt text-gray-500">邮箱地址无法修改</span>
-              </label>
-            </div>
-
-            {/* 姓名 */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">姓名 Full Name</span>
-              </label>
-              <input
-                type="text"
-                value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="input input-bordered"
-                placeholder="请输入您的姓名"
-              />
-            </div>
-
-            {/* 用户名 */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">用户名 Username</span>
-              </label>
-              <input
-                type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="input input-bordered"
-                placeholder="请输入用户名"
-              />
-              <label className="label">
-                <span className="label-text-alt">用户名将显示在您的文章和评论中</span>
-              </label>
-            </div>
-
-            {/* 电话号码 */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">电话号码 Phone Number</span>
-              </label>
-              <input
-                type="tel"
-                value={formData.phone_number}
-                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                className="input input-bordered"
-                placeholder="请输入电话号码"
-              />
-            </div>
-
-            {/* 账户信息 */}
-            <div className="divider">账户信息 Account Info</div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500">用户ID:</span>
-                <div className="font-mono text-xs">{user.id}</div>
-              </div>
-              <div>
-                <span className="text-gray-500">注册时间:</span>
-                <div>{profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : '未知'}</div>
-              </div>
-            </div>
-
-            {/* 提交按钮 */}
-            <div className="card-actions justify-end mt-8">
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn primary-orange"
-              >
-                {loading ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm"></span>
-                    更新中...
-                  </>
-                ) : (
-                  '更新资料 Update Profile'
-                )}
-              </button>
-            </div>
-          </form>
+    <MemberOnly
+      fallback={
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>
+          <p className="mt-4">您需要会员及以上权限才能访问文件页面。</p>
+          <p className="text-sm text-base-content/60 mt-2">
+            当前角色: {getRoleDisplayName(userRole || 'guest')}
+          </p>
         </div>
+      }
+    >
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">文件管理 Files</h1>
+            <p className="text-base-content/60 mt-2">
+              当前角色: {getRoleDisplayName(userRole || 'guest')}
+            </p>
+          </div>
+        </div>
+
+        {loading && (
+          <div className="flex justify-center py-12">
+            <span className="loading loading-spinner loading-lg"></span>
+          </div>
+        )}
+
+        {error && (
+          <div className="alert alert-error mb-6">
+            <span>{error}</span>
+            <button onClick={fetchFiles} className="btn btn-sm ml-4">
+              重试 Retry
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <div className="overflow-x-auto">
+            <table className="table table-zebra">
+              <thead>
+                <tr>
+                  <th>标题 Title</th>
+                  <th>文件名 File Name</th>
+                  <th>大小 Size</th>
+                  <th>上传者 Uploader</th>
+                  <th>上传时间 Created</th>
+                  <th>操作 Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {files.map((file) => (
+                  <tr key={file.id}>
+                    <td className="font-medium">{file.title}</td>
+                    <td>{file.file_name}</td>
+                    <td>{(file.file_size / 1024 / 1024).toFixed(2)} MB</td>
+                    <td>{file.uploader?.full_name || '未知'}</td>
+                    <td>{new Date(file.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <button
+                        onClick={() => handleDownload(file)}
+                        className="btn btn-sm btn-outline"
+                      >
+                        下载 Download
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {files.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📁</div>
+                <h3 className="text-xl font-bold mb-2">暂无文件</h3>
+                <p className="text-base-content/60">还没有文件上传。</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </MemberOnly>
   )
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +11,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // 🔒 获取 admin 客户端实例（仅服务端可用）
+    const supabaseAdmin = getSupabaseAdmin()
 
     // Generate signed URL for download (expires in 1 hour)
     const { data, error } = await supabaseAdmin.storage

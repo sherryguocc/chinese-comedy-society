@@ -4,16 +4,21 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { AdminOnly } from '@/components/PermissionGuard'
+import { hasPermission } from '@/lib/permissions'
 import { File } from '@/types/database'
 import Link from 'next/link'
 
-export default function AdminFilesPage() {
-  const { user } = useAuth()
+export default function AdminDashboardPage() {
+  const { user, userRole } = useAuth()
   const [files, setFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // ✅ 获取文件列表（仅在 AdminOnly 内执行）
+  const canManageUsers = hasPermission(userRole, 'MANAGE_USERS')
+  const canUploadFiles = hasPermission(userRole, 'UPLOAD_FILES')
+  const canCreatePosts = hasPermission(userRole, 'CREATE_POSTS')
+  const canCreateEvents = hasPermission(userRole, 'CREATE_EVENTS')
+
   const fetchFiles = async () => {
     try {
       setError(null)
@@ -34,18 +39,16 @@ export default function AdminFilesPage() {
     }
   }
 
-  // ✅ 仅在挂载后调用
   useEffect(() => {
-      fetchFiles()
+    fetchFiles()
   }, [])
 
-  // ✅ 页面主体
   return (
     <AdminOnly
       fallback={
         <div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>
-          <p className="mt-4">您没有访问文件管理页面的权限。</p>
+          <p className="mt-4">您需要管理员权限才能访问此页面。</p>
           <Link href="/" className="btn btn-primary mt-6">
             返回首页 Back to Home
           </Link>
@@ -54,77 +57,118 @@ export default function AdminFilesPage() {
     >
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">文件管理 File Management</h1>
-          <Link href="/admin" className="btn bg-black hover:bg-gray-800 text-white">
-            返回管理后台 Back to Dashboard
-          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">管理后台 Admin Dashboard</h1>
+            <p className="text-base-content/60 mt-2">
+              当前角色：{userRole === 'super_admin' ? '超级管理员' : '管理员'}
+            </p>
+          </div>
         </div>
 
-        {/* 加载状态 */}
-        {loading && (
-          <div className="flex justify-center py-12">
-            <span className="loading loading-spinner loading-lg"></span>
-          </div>
-        )}
-
-        {/* 错误状态 */}
-        {error && (
-          <div className="alert alert-error mb-4">
-            <span>{error}</span>
-            <button onClick={fetchFiles} className="btn btn-sm ml-4">
-              重试 Retry
-            </button>
-          </div>
-        )}
-
-        {/* 文件列表 */}
-        {!loading && !error && (
-          <>
-            {files.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="table table-zebra">
-                  <thead>
-                    <tr>
-                      <th>标题 Title</th>
-                      <th>描述 Description</th>
-                      <th>文件名 File Name</th>
-                      <th>上传时间 Created</th>
-                      <th>操作 Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {files.map((file) => (
-                      <tr key={file.id}>
-                        <td className="font-medium">{file.title}</td>
-                        <td>{file.description || '-'}</td>
-                        <td>{file.file_name}</td>
-                        <td>{new Date(file.created_at).toLocaleDateString()}</td>
-                        <td>
-                          <a
-                            href={`https://YOUR_SUPABASE_BUCKET_URL/${file.path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-outline"
-                          >
-                            下载 Download
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        {/* 功能卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {canCreatePosts && (
+            <Link href="/admin/posts/create" className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+              <div className="card-body">
+                <h2 className="card-title">📝 创建文章</h2>
+                <p>发布新的文章内容</p>
               </div>
-            ) : (
-              <div className="text-center py-12 bg-base-200 rounded-lg">
-                <div className="text-6xl mb-4">📂</div>
-                <h3 className="text-xl font-bold mb-2">暂无文件</h3>
-                <p className="text-base-content/60">
-                  当前还没有文件上传，请稍后再试。
-                </p>
+            </Link>
+          )}
+
+          {canCreateEvents && (
+            <Link href="/admin/events/create" className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+              <div className="card-body">
+                <h2 className="card-title">📅 创建活动</h2>
+                <p>发布新的活动信息</p>
+              </div>
+            </Link>
+          )}
+
+          {canUploadFiles && (
+            <Link href="/admin/files/upload" className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+              <div className="card-body">
+                <h2 className="card-title">📁 文件管理</h2>
+                <p>上传和管理文件</p>
+              </div>
+            </Link>
+          )}
+
+          {canManageUsers && (
+            <Link href="/admin/users" className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+              <div className="card-body">
+                <h2 className="card-title">👥 用户管理</h2>
+                <p>管理用户和权限</p>
+              </div>
+            </Link>
+          )}
+        </div>
+
+        {/* 文件列表部分 */}
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h2 className="card-title mb-4">最近文件 Recent Files</h2>
+            
+            {loading && (
+              <div className="flex justify-center py-12">
+                <span className="loading loading-spinner loading-lg"></span>
               </div>
             )}
-          </>
-        )}
+
+            {error && (
+              <div className="alert alert-error mb-4">
+                <span>{error}</span>
+                <button onClick={fetchFiles} className="btn btn-sm ml-4">
+                  重试 Retry
+                </button>
+              </div>
+            )}
+
+            {!loading && !error && (
+              <>
+                {files.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="table table-zebra">
+                      <thead>
+                        <tr>
+                          <th>标题 Title</th>
+                          <th>文件名 File Name</th>
+                          <th>上传时间 Created</th>
+                          <th>操作 Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {files.slice(0, 10).map((file) => (
+                          <tr key={file.id}>
+                            <td className="font-medium">{file.title}</td>
+                            <td>{file.file_name}</td>
+                            <td>{new Date(file.created_at).toLocaleDateString()}</td>
+                            <td>
+                              <a
+                                href={`https://YOUR_SUPABASE_BUCKET_URL/${file.path}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-sm btn-outline"
+                              >
+                                查看
+                              </a>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📂</div>
+                    <h3 className="text-xl font-bold mb-2">暂无文件</h3>
+                    <p className="text-base-content/60">还没有文件上传。</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </AdminOnly>
   )

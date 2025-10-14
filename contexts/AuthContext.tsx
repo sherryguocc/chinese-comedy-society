@@ -458,8 +458,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('🎯 [AuthContext] fetchUserData called with:', { userId, forceRefresh });
       
-      console.log('📡 [AuthContext] About to make API call to fetch user data');
-      
       // 只在没有用户数据时才显示loading，避免已有用户头像时的闪烁
       if (!profile && !admin && !userRole) {
         console.log('⏳ [AuthContext] Setting loading to true for data fetch');
@@ -468,22 +466,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // 使用新的getUserRole函数来获取用户数据
       console.log('🚀 [AuthContext] Calling getUserRole with userId:', userId, 'forceRefresh:', forceRefresh);
-      const { role, profile: profileData, admin: adminData } = await getUserRole(userId, forceRefresh);
+      const { userRole: role, profileData, adminData } = await getUserRole(userId, forceRefresh);
       
       console.log('✅ [AuthContext] getUserRole completed! Result:', {
         role,
         hasProfile: !!profileData,
         hasAdmin: !!adminData,
-        profileRole: profileData?.role,
-        isAdminSuperAdmin: adminData?.is_super_admin
+        profileRole: profileData?.role
       });
       
       setProfile(profileData);
       setAdmin(adminData);
       setUserRole(role);
       setDataFetched(true); // 标记数据已获取
-    } catch (error) {
-      console.error('Fetch user data error:', error);
+    } catch (error: unknown) {
+      const err = error as Error
+      console.error('Fetch user data error:', err.message);
       setProfile(null);
       setAdmin(null);
       setUserRole(null);

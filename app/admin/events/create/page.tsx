@@ -80,7 +80,7 @@ export default function CreateEvent() {
       console.log('Admin info:', { 
         id: admin?.id || user.id, 
         role: userRole, 
-        email: admin?.email || user.email 
+        email: user.email 
       })
 
       // 添加超时控制的数据库操作

@@ -8,15 +8,15 @@ export default function RoleTestPage() {
   const { user, profile, loading } = useAuth()
 
   const testPermissions = [
-    'CREATE_POST',
-    'EDIT_POST', 
-    'DELETE_POST',
-    'CREATE_EVENT',
+    'VIEW_CONTENT',
+    'CREATE_POSTS',
+    'CREATE_EVENTS',
+    'UPLOAD_FILES',
+    'DOWNLOAD_FILES',
+    'CREATE_COMMENTS',
     'MANAGE_USERS',
-    'COMMENT_POST',
-    'DOWNLOAD_FILE',
-    'VIEW_POST',
-    'VIEW_EVENT',
+    'MANAGE_ADMINS',
+    'SYSTEM_SETTINGS',
   ] as const
 
   const testRoles: UserRole[] = ['guest', 'member', 'admin']

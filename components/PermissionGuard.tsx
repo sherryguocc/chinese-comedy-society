@@ -2,10 +2,15 @@
 
 import { ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { hasPermission, PERMISSIONS, isAdmin, isSuperAdmin } from '@/lib/permissions'
+import { hasPermission, PERMISSIONS, isAdmin, isSuperAdmin, isMember } from '@/lib/permissions'
 
 interface PermissionGuardProps {
   permission: keyof typeof PERMISSIONS
+  children: ReactNode
+  fallback?: ReactNode
+}
+
+interface SimpleGuardProps {
   children: ReactNode
   fallback?: ReactNode
 }
@@ -27,10 +32,7 @@ export default function PermissionGuard({
 export function AdminOnly({
   children,
   fallback = null,
-}: {
-  children: ReactNode
-  fallback?: ReactNode
-}) {
+}: SimpleGuardProps) {
   const { userRole, loading, user } = useAuth()
 
   if (process.env.NODE_ENV === 'development') {
@@ -55,25 +57,20 @@ export function AdminOnly({
 export function SuperAdminOnly({
   children,
   fallback = null,
-}: {
-  children: ReactNode
-  fallback?: ReactNode
-}) {
+}: SimpleGuardProps) {
   const { userRole, loading, user } = useAuth()
 
   if (process.env.NODE_ENV === 'development') {
     console.log('SuperAdminOnly Check:', {
       hasUser: !!user,
       userRole,
-      isSuperAdmin: isSuperAdmin(userRole),
+      isSuperAdminUser: isSuperAdmin(userRole),
       loading,
     })
   }
 
-  // 如果没有用户或仍在加载，返回 fallback
   if (!user || loading) return <>{fallback}</>
   
-  // 检查是否为超级管理员
   if (!isSuperAdmin(userRole)) return <>{fallback}</>
 
   return <>{children}</>
@@ -83,28 +80,22 @@ export function SuperAdminOnly({
 export function MemberOnly({
   children,
   fallback = null,
-}: {
-  children: ReactNode
-  fallback?: ReactNode
-}) {
+}: SimpleGuardProps) {
   const { userRole, loading, user } = useAuth()
   
   if (process.env.NODE_ENV === 'development') {
     console.log('MemberOnly Check:', {
       hasUser: !!user,
       userRole,
-      isAdminUser: isAdmin(userRole),
+      isMemberUser: isMember(userRole),
       loading,
-      condition1: userRole !== 'member',
-      condition2: !isAdmin(userRole),
-      finalCheck: userRole !== 'member' && !isAdmin(userRole)
     })
   }
   
   if (loading || !user) return <>{fallback}</>
 
   // Member, admin, 或 super_admin 都可以访问
-  if (userRole !== 'member' && !isAdmin(userRole)) return <>{fallback}</>
+  if (!isMember(userRole)) return <>{fallback}</>
 
   return <>{children}</>
 }

@@ -1,5 +1,5 @@
-// 严格的小写角色类型 - profiles 表只有 guest 和 member
-export type ProfileRole = 'guest' | 'member'
+// 严格的小写角色类型 - profiles 表包括三种role
+export type ProfileRole = 'guest' | 'member' | 'admin'
 // Admin 相关类型
 export type AdminPermissions = {
   manage_users?: boolean
@@ -16,23 +16,16 @@ export interface Profile {
   username?: string
   full_name?: string
   phone_number?: string
-  role: ProfileRole // 只能是 'guest' 或 'member'
+  role: ProfileRole
   created_at: string
 }
 
 export interface Admin {
-  id: string // UUID reference to auth.users(id)
-  email: string
-  full_name?: string
-  created_at: string
-  updated_at: string
-  is_super_admin: boolean
-  permissions: AdminPermissions
-  created_by?: string // UUID reference to admins(id)
+  id: string // 只存储 super admin 的 UUID
 }
 
-// 扩展的用户角色类型，包含所有可能的角色
-export type UserRole = ProfileRole | 'admin' | 'super_admin'
+// 扩展的用户角色类型，比ProfileRole多了 super_admin
+export type UserRole = ProfileRole | 'super_admin'
 
 export interface Post {
   id: string
@@ -95,24 +88,12 @@ export interface Database {
       admins: {
         Row: Admin
         Insert: {
-          id?: string
-          email: string
-          full_name?: string
-          is_super_admin: boolean
-          permissions: AdminPermissions
-          created_by?: string
-          created_at?: string
-          updated_at?: string
+          id: string
         }
         Update: {
-          email?: string
-          full_name?: string
-          is_super_admin?: boolean
-          permissions?: AdminPermissions
-          created_by?: string
-          created_at?: string
-          updated_at?: string
+          id?: string
         }
+      }
       posts: {
         Row: Post
         Insert: Omit<Post, 'id' | 'created_at'>
@@ -135,5 +116,4 @@ export interface Database {
       }
     }
   }
-}
 }
