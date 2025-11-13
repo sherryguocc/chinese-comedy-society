@@ -3,6 +3,7 @@ import { supabase, getSupabaseAdmin } from '@/lib/supabase'
 import { Database } from '@/types/database'
 import { withTimeout } from '@/lib/utils'
 import { getCachedRole, setCachedRole } from '@/lib/cache' 
+import type { PostgrestResponse } from '@supabase/supabase-js'
 
 // ✅ 从 Database 泛型中取出 admin 表的 Row 类型
 type AdminRow = Database['public']['Tables']['admins']['Row']
