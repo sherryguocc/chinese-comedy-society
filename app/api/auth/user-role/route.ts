@@ -136,10 +136,11 @@ export async function POST(request: NextRequest) {
     // ✅ 用 RPC 获取用户角色（使用 timeout 包裹）
     const { data, error } = await withTimeout(
       supabaseAdmin
-      .rpc<UserRoleRPCResult>('get_user_role', { uid: userId })
-      .single(),
+        .rpc<UserRoleRPCResult>('get_user_role', { uid: userId })
+        .single() as Promise<PostgrestSingleResponse<UserRoleRPCResult>>,
       6000
     )
+
 
     if (error || !data || data.length === 0) {
       console.warn(`[USER-ROLE] ❌ Failed to get user role for ${userId}`, error)
