@@ -122,6 +122,7 @@ export default function EventsPage() {
           <h1 className="text-3xl font-bold mb-2">活动日历 Events Calendar</h1>
           <p className="text-base-content/60">
             查看华人喜剧协会的活动安排
+            Here are all Chinese Comedy events held by multiple organisers in New Zealand.
           </p>
         </div>
         
@@ -192,7 +193,7 @@ export default function EventsPage() {
                               </p>
                             )}
                             {event.description && (
-                              <p className="text-xs text-gray-700 text-clamp-2">
+                              <p className="text-xs text-gray-700 text-clamp-4">
                                 {event.description}
                               </p>
                             )}

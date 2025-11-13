@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, getSupabaseAdmin } from '@/lib/supabase'
 import { Database } from '@/types/database'
+import { withTimeout } from '@/lib/utils'
+import { getCachedRole, setCachedRole } from '@/lib/cache' 
 
 // ✅ 从 Database 泛型中取出 admin 表的 Row 类型
 type AdminRow = Database['public']['Tables']['admins']['Row']
@@ -115,63 +117,47 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await request.json()
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
     }
 
-    console.log(`[API POST] User role request for: ${userId}`)
-
-    // 首先检查是否为 super admin
-    const supabaseAdmin = getSupabaseAdmin()
-    const { data: superAdminData, error: superAdminError } = await supabaseAdmin
-      .from('admins')
-      .select('id')
-      .eq('id', userId)
-      .maybeSingle()
-
-    if (superAdminData) {
-      console.log(`[API POST] User ${userId} is super_admin`)
-      return NextResponse.json({
-        userRole: 'super_admin',
-        profileData: null,
-        adminData: { id: userId }
-      })
+    // ✅ 缓存检查（可选）
+    const cached = getCachedRole(userId)
+    if (cached) {
+      console.log(`[USER-ROLE] ✅ Using cached role for ${userId}`)
+      return NextResponse.json(cached)
     }
 
-    // 检查 profiles 表
-    const { data: profileData, error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle() as { 
-        data: ProfileRow | null
-        error: Error | null
-      }
+    const supabaseAdmin = getSupabaseAdmin()
 
-    if (profileData) {
-      console.log(`[API POST] User ${userId} role from profiles: ${profileData.role}`)
+    // ✅ 用 RPC 获取用户角色（使用 timeout 包裹）
+    const { data, error } = await withTimeout(
+      supabaseAdmin.rpc('get_user_role', { uid: userId }),
+      6000
+    )
+
+    if (error || !data || data.length === 0) {
+      console.warn(`[USER-ROLE] ❌ Failed to get user role for ${userId}`, error)
       return NextResponse.json({
-        userRole: profileData.role,
-        profileData,
+        userRole: 'guest',
+        profileData: null,
         adminData: null
       })
     }
 
-    // 如果都没找到，默认为 guest
-    console.log(`[API POST] User ${userId} defaulting to guest`)
-    return NextResponse.json({
-      userRole: 'guest',
-      profileData: null,
-      adminData: null
-    })
+    const result = {
+      userRole: data[0].is_admin ? 'super_admin' : data[0].role || 'guest',
+      profileData: data[0].profile,
+      adminData: data[0].is_admin ? { id: userId } : null,
+    }
 
-  } catch (error: unknown) {
-    const err = error as Error
-    console.error('[API POST] Error getting user role:', err.message)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    // ✅ 缓存角色（可选）
+    setCachedRole(userId, result)
+
+    return NextResponse.json(result)
+  } catch (err) {
+    console.error(`[USER-ROLE] 🚨 Unexpected error:`, err)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
