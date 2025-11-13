@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin()
 
     // ✅ 用 RPC 获取用户角色（使用 timeout 包裹）
-    const { data, error } = await withTimeout<PostgrestResponse<UserRoleRPCResult>>(
+    const { data, error } = await withTimeout(
       supabaseAdmin
       .rpc<UserRoleRPCResult>('get_user_role', { uid: userId })
       .single(),
