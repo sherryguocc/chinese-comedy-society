@@ -184,7 +184,7 @@ export default function EventsPage() {
                             </p>
                             {event.location && (
                               <p className="text-xs text-gray-500 mb-1">
-                                📍 {event.location}
+                                📍 {event.location} 
                               </p>
                             )}
                             {event.organiser && (
