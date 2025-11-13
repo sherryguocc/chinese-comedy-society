@@ -77,6 +77,12 @@ export interface Comment {
   created_at: string
 }
 
+export type UserRoleRPCResult = {
+  role: string;                 // coalesce 保证不会是 null
+  profile: ProfileRow | null;   // to_jsonb(p) 返回 JSONB，可能没有行
+  is_admin: boolean;            // 布尔
+}
+
 export interface Database {
   public: {
     Tables: {
