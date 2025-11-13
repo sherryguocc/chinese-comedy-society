@@ -77,12 +77,6 @@ export interface Comment {
   created_at: string
 }
 
-export type UserRoleRPCResult = {
-  role: string;                 // coalesce 保证不会是 null
-  profile: ProfileRow | null;   // to_jsonb(p) 返回 JSONB，可能没有行
-  is_admin: boolean;            // 布尔
-}
-
 export interface Database {
   public: {
     Tables: {
@@ -122,4 +116,25 @@ export interface Database {
       }
     }
   }
+}
+
+// ============================================
+// Helper Types - 从 Database 派生的类型
+// ============================================
+export type ProfileRow = Database['public']['Tables']['profiles']['Row']
+export type AdminRow = Database['public']['Tables']['admins']['Row']
+export type PostRow = Database['public']['Tables']['posts']['Row']
+export type FileRow = Database['public']['Tables']['files']['Row']
+export type EventRow = Database['public']['Tables']['events']['Row']
+export type CommentRow = Database['public']['Tables']['comments']['Row']
+
+// ============================================
+// RPC 返回类型
+// ============================================
+export type UserRoleRPCResult = {
+  role: string                  // coalesce 保证不会是 null
+  profile: ProfileRow | null    // to_jsonb(p) 返回 JSONB，可能没有行
+  is_admin: boolean             // 布尔
+}
+
 }
