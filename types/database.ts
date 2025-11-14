@@ -136,5 +136,3 @@ export type UserRoleRPCResult = {
   profile: ProfileRow | null    // to_jsonb(p) 返回 JSONB，可能没有行
   is_admin: boolean             // 布尔
 }
-
-}
