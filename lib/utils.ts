@@ -17,3 +17,22 @@ export async function withTimeout<T>(
     )
   })
 }
+
+export function getSafeExternalUrl(value?: string | null): string | null {
+  const raw = value?.trim()
+  if (!raw) {
+    return null
+  }
+
+  const normalized = /^www\./i.test(raw) ? `https://${raw}` : raw
+
+  try {
+    const parsed = new URL(normalized)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return parsed.toString()
+    }
+    return null
+  } catch {
+    return null
+  }
+}

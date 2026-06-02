@@ -8,6 +8,7 @@ import { EventType } from '@/types/database'
 import { isAdmin } from '@/lib/permissions'
 import AdminLayout from '@/components/AdminLayout'
 import AccessDeniedPanel from '@/components/AccessDeniedPanel'
+import { getSafeExternalUrl } from '@/lib/utils'
 
 // 活动类型选项
 const EVENT_TYPE_OPTIONS: { value: EventType; label: string; icon: string; description: string }[] = [
@@ -29,9 +30,12 @@ export default function CreateEvent() {
     start_time: '',
     end_time: '',
     location: '',
+    link: '',
     event_type: 'meetup' as EventType,
     organiser: '华人喜剧协会CCS'
   })
+
+  const linkUrl = getSafeExternalUrl(formData.link)
 
   // 添加超时检测
   useEffect(() => {
@@ -71,6 +75,7 @@ export default function CreateEvent() {
         start_time: formData.start_time,
         end_time: formData.end_time || null,
         location: formData.location,
+        link: formData.link.trim() || null,
         event_type: formData.event_type,
         organiser: formData.organiser,
         create_by: user.id
@@ -309,6 +314,21 @@ export default function CreateEvent() {
               </div>
             </div>
 
+            {/* 活动链接（购票/联系方式） */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg font-semibold">活动链接 Link</span>
+                <span className="label-text-alt">可选 Optional</span>
+              </label>
+              <input
+                type="text"
+                value={formData.link}
+                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                className="input input-bordered w-full"
+                placeholder="购票链接或联系方式 (URL / WeChat / Phone...)"
+              />
+            </div>
+
             {/* 提交按钮 */}
             <div className="card-actions justify-end mt-6">
               <button
@@ -373,6 +393,24 @@ export default function CreateEvent() {
                   <p className="text-sm text-gray-500 mb-2">
                     👤 {formData.organiser}
                   </p>
+                )}
+
+                {formData.link && (
+                  <div className="text-sm mb-2 break-all">
+                    <span className="mr-1">🔗</span>
+                    {linkUrl ? (
+                      <a
+                        href={linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {formData.link}
+                      </a>
+                    ) : (
+                      <span className="text-gray-600">{formData.link}</span>
+                    )}
+                  </div>
                 )}
                 
                 {formData.description && (

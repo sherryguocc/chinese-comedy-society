@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Event, EventType } from '@/types/database'
 import EventCalendar from '@/components/EventCalendar'
+import { getSafeExternalUrl } from '@/lib/utils'
 
 // 活动类型名称
 const EVENT_TYPE_NAMES: Record<EventType, string> = {
@@ -99,6 +100,23 @@ export default function EventsPage() {
     }).format(date)
   }
 
+  const renderEventLink = (link?: string) => {
+    if (!link) {
+      return null
+    }
+
+    const url = getSafeExternalUrl(link)
+    if (url) {
+      return (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
+          {link}
+        </a>
+      )
+    }
+
+    return <span className="break-all">{link}</span>
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -188,6 +206,12 @@ export default function EventsPage() {
                                 👤 {event.organiser}
                               </p>
                             )}
+                            {event.link && (
+                              <div className="text-xs text-gray-600 mb-2">
+                                <span className="mr-1">🔗</span>
+                                {renderEventLink(event.link)}
+                              </div>
+                            )}
                             {event.description && (
                               <p className="text-xs text-gray-700 text-clamp-4">
                                 {event.description}
@@ -254,6 +278,13 @@ export default function EventsPage() {
                           <div className="flex items-center gap-2">
                             <span>👤</span>
                             <span>{event.organiser}</span>
+                          </div>
+                        )}
+
+                        {event.link && (
+                          <div className="flex items-start gap-2">
+                            <span>🔗</span>
+                            {renderEventLink(event.link)}
                           </div>
                         )}
                       </div>

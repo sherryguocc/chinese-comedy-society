@@ -61,6 +61,7 @@ export interface Event {
   start_time: string
   end_time?: string  // 可选的结束时间
   location?: string
+  link?: string
   event_type: EventType
   organiser?: string
   create_by: string
