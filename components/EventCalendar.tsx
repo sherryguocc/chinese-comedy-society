@@ -185,13 +185,16 @@ export default function EventCalendar({ events, onDateClick, selectedDate }: Eve
         {calendarDays.map(date => {
           const dayEvents = getEventsForDate(date)
           const eventCounts = getEventTypeCountsForDate(date)
+          const indicatorEntries = Object.entries(eventCounts)
+          const visibleIndicators = indicatorEntries.slice(0, 2)
+          const hiddenIndicators = indicatorEntries.length - visibleIndicators.length
           
           return (
             <div
               key={date.toISOString()}
               onClick={() => onDateClick(date, dayEvents)}
               className={`
-                aspect-square p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors
+                min-h-[68px] sm:min-h-[84px] p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors
                 ${!isCurrentMonth(date) ? 'text-gray-400 bg-gray-50' : ''}
                 ${isToday(date) ? 'bg-orange-100 border-orange-300' : ''}
                 ${isSelected(date) ? 'bg-orange-200 border-orange-400' : ''}
@@ -199,17 +202,17 @@ export default function EventCalendar({ events, onDateClick, selectedDate }: Eve
             >
               <div className="h-full flex flex-col">
                 {/* 日期数字 */}
-                <div className="text-sm font-medium mb-1">
+                <div className="text-xs sm:text-sm font-medium mb-1">
                   {date.getDate()}
                 </div>
                 
                 {/* 事件类型指示器 */}
-                <div className="flex-1 flex flex-wrap gap-1">
-                  {Object.entries(eventCounts).map(([eventType, count]) => (
+                <div className="flex-1 flex flex-wrap items-start gap-1 overflow-hidden">
+                  {visibleIndicators.map(([eventType, count]) => (
                     <div
                       key={eventType}
                       className={`
-                        text-xs px-1 py-0.5 rounded-full font-bold
+                        text-[10px] w-4 h-4 sm:w-5 sm:h-5 rounded-full font-bold flex items-center justify-center
                         ${EVENT_TYPE_COLORS[eventType as EventType]}
                       `}
                       title={`${EVENT_TYPE_NAMES[eventType as EventType]}: ${count}个`}
@@ -217,6 +220,14 @@ export default function EventCalendar({ events, onDateClick, selectedDate }: Eve
                       {count}
                     </div>
                   ))}
+                  {hiddenIndicators > 0 && (
+                    <div
+                      className="text-[10px] w-4 h-4 sm:w-5 sm:h-5 rounded-full font-bold flex items-center justify-center bg-gray-300 text-gray-700"
+                      title={`还有 ${hiddenIndicators} 种活动类型`}
+                    >
+                      +{hiddenIndicators}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

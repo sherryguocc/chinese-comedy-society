@@ -114,8 +114,11 @@ export default function EventsPage() {
       {/* 页面标题和视图切换 */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">活动日历 Events Calendar</h1>
-          <div className="text-base-content/60 space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 leading-tight">
+            <span className="sm:hidden">活动日历<br />Events Calendar</span>
+            <span className="hidden sm:inline">活动日历 Events Calendar</span>
+          </h1>
+          <div className="text-sm sm:text-base text-base-content/60 space-y-1">
             <p>查看华人喜剧协会的活动安排</p>
             <p>Browse upcoming Chinese Comedy Society events across New Zealand.</p>
           </div>
@@ -123,16 +126,18 @@ export default function EventsPage() {
         
         <div className="tabs tabs-boxed w-full md:w-auto mt-4 md:mt-0">
           <button 
-            className={`tab py-2 px-3 text-xs sm:text-sm ${viewMode === 'calendar' ? 'tab-active' : ''}`}
+            className={`tab flex-1 md:flex-none h-auto py-2 px-2 text-xs sm:text-sm text-center leading-tight ${viewMode === 'calendar' ? 'tab-active' : ''}`}
             onClick={() => setViewMode('calendar')}
           >
-            📅 日历 / Calendar
+            <span className="sm:hidden">📅 日历<br />Calendar</span>
+            <span className="hidden sm:inline">📅 日历 / Calendar</span>
           </button>
           <button 
-            className={`tab py-2 px-3 text-xs sm:text-sm ${viewMode === 'list' ? 'tab-active' : ''}`}
+            className={`tab flex-1 md:flex-none h-auto py-2 px-2 text-xs sm:text-sm text-center leading-tight ${viewMode === 'list' ? 'tab-active' : ''}`}
             onClick={() => setViewMode('list')}
           >
-            📋 列表 / List
+            <span className="sm:hidden">📋 列表<br />List</span>
+            <span className="hidden sm:inline">📋 列表 / List</span>
           </button>
         </div>
       </div>
