@@ -93,8 +93,10 @@ export default function LibraryPage() {
       {!userCanDownload && (
         <div className="alert alert-warning mb-6">
           <span>
-            📝 您当前是{getRoleDisplayName(userRole || 'guest')}，只能浏览文件。
+            📝 您当前是{getRoleDisplayName(userRole || 'guest')}，只能浏览文件列表。
             需要会员及以上权限才能下载文件。
+            📝 Your current role is {getRoleDisplayName(userRole || 'guest')}，you can only browse the file list.
+            Member access or higher is required to download files.
           </span>
         </div>
       )}
