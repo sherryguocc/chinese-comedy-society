@@ -63,10 +63,10 @@ export default function FilesPage() {
 
   const getRoleDisplayName = (role: string) => {
     const roleNames = {
-      guest: '访客',
-      member: '会员', 
-      admin: '管理员',
-      super_admin: '超级管理员'
+      guest: '访客Guest',
+      member: '会员Member', 
+      admin: '管理员Admin',
+      super_admin: '超级管理员Super Admin'
     }
     return roleNames[role as keyof typeof roleNames] || role
   }

@@ -83,9 +83,9 @@ export default function LibraryPage() {
         <div>
           <h1 className="text-3xl font-bold">资料库 Library</h1>
           <p className="text-base-content/60 mt-2">
-            当前用户: {user?.email || '未登录'} | 
-            角色: {getRoleDisplayName(userRole || 'guest')} |
-            下载权限: {userCanDownload ? '✅' : '❌'}
+            当前用户Current User: {user?.email || '未登录 Not Logged In'} | 
+            角色Role: {getRoleDisplayName(userRole || 'guest')} |
+            下载权限Download Permission: {userCanDownload ? '✅' : '❌'}
           </p>
         </div>
       </div>
@@ -95,6 +95,7 @@ export default function LibraryPage() {
           <span>
             📝 您当前是{getRoleDisplayName(userRole || 'guest')}，只能浏览文件列表。
             需要会员及以上权限才能下载文件。
+
             📝 Your current role is {getRoleDisplayName(userRole || 'guest')}，you can only browse the file list.
             Member access or higher is required to download files.
           </span>
