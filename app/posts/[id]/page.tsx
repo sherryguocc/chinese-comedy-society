@@ -8,6 +8,7 @@ import { Post, Comment } from '@/types/database'
 
 export default function PostDetailPage() {
   const params = useParams()
+  const postId = Array.isArray(params.id) ? params.id[0] : params.id
   const { user, userRole } = useAuth()
   const [post, setPost] = useState<Post | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
@@ -18,6 +19,8 @@ export default function PostDetailPage() {
   const userCanComment = canComment(userRole)
 
   const fetchPost = async () => {
+    if (!postId) return
+
     try {
       const { data, error } = await supabase
         .from('posts')
@@ -25,7 +28,7 @@ export default function PostDetailPage() {
           *,
           author:profiles(id, full_name, role)
         `)
-        .eq('id', params.id)
+        .eq('id', postId)
         .single()
 
       if (error) throw error
@@ -36,6 +39,11 @@ export default function PostDetailPage() {
   }
 
   const fetchComments = async () => {
+    if (!postId) {
+      setLoading(false)
+      return
+    }
+
     try {
       const { data, error } = await supabase
         .from('comments')
@@ -43,7 +51,7 @@ export default function PostDetailPage() {
           *,
           author:profiles(id, full_name, role)
         `)
-        .eq('post_id', params.id)
+        .eq('post_id', postId)
         .order('created_at', { ascending: true })
 
       if (error) throw error
@@ -71,7 +79,7 @@ export default function PostDetailPage() {
         .from('comments')
         .insert({
           content: newComment.trim(),
-          post_id: params.id as string,
+          post_id: postId,
           author_id: user.id
         })
 
@@ -90,7 +98,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     fetchPost()
     fetchComments()
-  }, [params.id])
+  }, [postId])
 
   const getRoleDisplayName = (role: string) => {
     const roleNames = {
