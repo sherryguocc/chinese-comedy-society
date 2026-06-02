@@ -67,7 +67,7 @@ export default function PostDetailPage() {
     e.preventDefault()
     
     if (!userCanComment) {
-      alert('您需要会员及以上权限才能发表评论')
+      alert('您需要会员及以上权限才能发表评论。You need member access or above to comment.')
       return
     }
 
@@ -89,7 +89,7 @@ export default function PostDetailPage() {
       await fetchComments()
     } catch (error) {
       console.error('Error submitting comment:', error)
-      alert('评论发布失败')
+      alert('评论发布失败。Failed to submit comment.')
     } finally {
       setSubmitting(false)
     }
@@ -113,7 +113,7 @@ export default function PostDetailPage() {
   if (!post) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold">文章未找到</h1>
+        <h1 className="text-2xl font-bold">文章未找到 / Post Not Found</h1>
       </div>
     )
   }
@@ -125,8 +125,8 @@ export default function PostDetailPage() {
         <div className="card-body">
           <h1 className="card-title text-3xl mb-4">{post.title}</h1>
           <div className="text-sm text-base-content/60 mb-6">
-            作者: {post.author?.full_name} | 
-            发布时间: {new Date(post.created_at).toLocaleDateString()}
+            作者 / Author: {post.author?.full_name} | 
+            发布时间 / Published: {new Date(post.created_at).toLocaleDateString()}
           </div>
           <div className="prose max-w-none">
             {post.content.split('\n').map((paragraph, index) => (
@@ -147,7 +147,7 @@ export default function PostDetailPage() {
               <form onSubmit={handleSubmitComment} className="mb-6">
                 <textarea
                   className="textarea textarea-bordered w-full mb-4"
-                  placeholder="写下您的评论..."
+                  placeholder="写下您的评论... / Write your comment..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   rows={3}
@@ -158,18 +158,19 @@ export default function PostDetailPage() {
                   className="btn btn-primary"
                   disabled={submitting || !newComment.trim()}
                 >
-                  {submitting ? '发布中...' : '发布评论'}
+                  {submitting ? '发布中... / Posting...' : '发布评论 / Post Comment'}
                 </button>
               </form>
             ) : (
               <div className="alert alert-info mb-6">
-                <span>请登录后发表评论</span>
+                <span>请登录后发表评论 / Please log in to comment</span>
               </div>
             )
           ) : (
             <div className="alert alert-warning mb-6">
               <span>
-                您当前是{getRoleDisplayName(userRole || 'guest')}，需要会员及以上权限才能发表评论。
+                您当前是 {getRoleDisplayName(userRole || 'guest')}，需要会员及以上权限才能发表评论。
+                You are currently {getRoleDisplayName(userRole || 'guest')}, and member access or above is required to comment.
               </span>
             </div>
           )}
@@ -193,7 +194,7 @@ export default function PostDetailPage() {
               ))
             ) : (
               <p className="text-center text-base-content/60 py-8">
-                还没有评论，来发表第一个评论吧！
+                还没有评论，来发表第一个评论吧！ / No comments yet. Be the first to comment!
               </p>
             )}
           </div>

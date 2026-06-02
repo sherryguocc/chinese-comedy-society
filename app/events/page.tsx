@@ -259,11 +259,14 @@ export default function EventsPage() {
                       </div>
                       
                       <div className="text-sm text-base-content/70 space-y-1 mb-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span>⏰</span>
-                          <span>{formatEventTime(event.start_time, event.end_time)}</span>
+                          <span className="min-w-0">{formatEventTime(event.start_time, event.end_time)}</span>
                           {isUpcoming(event.start_time) && (
-                            <span className="badge badge-success badge-sm">即将举行 / Upcoming</span>
+                            <span className="badge badge-success badge-sm whitespace-nowrap text-[10px] sm:text-xs">
+                              <span className="sm:hidden">即将 / Soon</span>
+                              <span className="hidden sm:inline">即将举行 / Upcoming</span>
+                            </span>
                           )}
                         </div>
                         
