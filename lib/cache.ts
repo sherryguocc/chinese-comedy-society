@@ -14,3 +14,12 @@ export function getCachedRole(userId: string) {
 export function setCachedRole(userId: string, data: any) {
   roleCache.set(userId, { timestamp: Date.now(), data })
 }
+
+export function clearCachedRole(userId?: string) {
+  if (userId) {
+    roleCache.delete(userId)
+    return
+  }
+
+  roleCache.clear()
+}

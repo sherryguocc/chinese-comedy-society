@@ -84,21 +84,20 @@ export const canManageUsers = (role: UserRole | null) => hasPermission(role, PER
 const CACHE_DURATION = 5 * 60 * 1000 // 5分钟
 let roleCache: Record<string, { data: UserRoleData; timestamp: number }> = {}
 
-export async function getUserRole(userId: string, forceRefresh = false): Promise<UserRoleData> {
-  const cacheKey = `user_role_${userId}`
+export async function getUserRole(_userId?: string, forceRefresh = false): Promise<UserRoleData> {
+  const cacheKey = 'user_role_current_user'
 
   if (!forceRefresh && roleCache[cacheKey] && Date.now() - roleCache[cacheKey].timestamp < CACHE_DURATION) {
-    console.log(`📋 [getUserRole] Using cached data for ${userId}`)
+    console.log('📋 [getUserRole] Using cached role data')
     return roleCache[cacheKey].data
   }
 
   try {
-    console.log(`🌐 [getUserRole] Fetching role from API for ${userId}`)
+    console.log('🌐 [getUserRole] Fetching role from API for current user')
 
     const response = await fetch('/api/auth/user-role', {
-      method: 'POST',
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
     })
 
     if (!response.ok) {
@@ -128,17 +127,14 @@ export async function getUserRole(userId: string, forceRefresh = false): Promise
 
 // 清除缓存
 export function clearUserRoleCache(userId?: string) {
-  if (userId) {
-    delete roleCache[`user_role_${userId}`]
-  } else {
-    roleCache = {}
-  }
+  if (userId) delete roleCache['user_role_current_user']
+  else roleCache = {}
 }
 
 // 🔐 前端权限检查辅助函数
-export async function checkUserPermission(userId: string, permission: Permission): Promise<boolean> {
+export async function checkUserPermission(permission: Permission): Promise<boolean> {
   try {
-    const { userRole } = await getUserRole(userId)
+    const { userRole } = await getUserRole()
     return hasPermission(userRole, permission)
   } catch (error) {
     console.error('Error checking user permission:', error)
@@ -148,20 +144,20 @@ export async function checkUserPermission(userId: string, permission: Permission
 
 // 🛡️ API 调用前的权限预检查
 export const PreflightPermissionCheck = {
-  async canUpdateUserRole(requesterId: string): Promise<boolean> {
-    return await checkUserPermission(requesterId, PERMISSIONS.MANAGE_USERS)
+  async canUpdateUserRole(): Promise<boolean> {
+    return await checkUserPermission(PERMISSIONS.MANAGE_USERS)
   },
   
-  async canManageSuperAdmins(requesterId: string): Promise<boolean> {
-    return await checkUserPermission(requesterId, PERMISSIONS.MANAGE_ADMINS)
+  async canManageSuperAdmins(): Promise<boolean> {
+    return await checkUserPermission(PERMISSIONS.MANAGE_ADMINS)
   },
   
-  async canCreateContent(requesterId: string): Promise<boolean> {
-    return await checkUserPermission(requesterId, PERMISSIONS.CREATE_POSTS)
+  async canCreateContent(): Promise<boolean> {
+    return await checkUserPermission(PERMISSIONS.CREATE_POSTS)
   },
   
-  async canUploadFiles(requesterId: string): Promise<boolean> {
-    return await checkUserPermission(requesterId, PERMISSIONS.UPLOAD_FILES)
+  async canUploadFiles(): Promise<boolean> {
+    return await checkUserPermission(PERMISSIONS.UPLOAD_FILES)
   }
 }
 

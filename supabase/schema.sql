@@ -40,17 +40,17 @@ CREATE TABLE posts (
 
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 
--- Policy: Anyone can view posts, only members+ can create
--- 策略：任何人都可以查看帖子，只有会员+可以创建
+-- Policy: Anyone can view posts, only admins can create
+-- 策略：任何人都可以查看帖子，只有管理员可以创建
 CREATE POLICY "Anyone can view posts" ON posts
   FOR SELECT USING (true);
 
-CREATE POLICY "Members can create posts" ON posts
+CREATE POLICY "Admins can create posts" ON posts
   FOR INSERT WITH CHECK (
     EXISTS (
       SELECT 1 FROM profiles 
       WHERE id = auth.uid() 
-      AND role IN ('member', 'admin')
+      AND role = 'admin'
     )
   );
 

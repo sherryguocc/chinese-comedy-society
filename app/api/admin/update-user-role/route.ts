@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, getSupabaseAdmin } from '@/lib/supabase'
 import { Database } from '@/types/database'
+import { clearCachedRole } from '@/lib/cache'
 
 type ProfileRole = Database['public']['Tables']['profiles']['Row']['role']
+const SUPER_ADMIN_EMAIL = 'sherryguocc@gmail.com'
 
 // POST 方法：修改用户角色（只有 super_admin 可以操作）
 export async function POST(request: NextRequest) {
@@ -26,22 +28,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 🔒 获取 admin 客户端
-    const supabaseAdmin = getSupabaseAdmin()
-
-    // 检查请求者是否为 super_admin
-    const { data: adminData } = await supabaseAdmin
-      .from('admins')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (!adminData) {
+    // super_admin 只通过固定邮箱判定
+    if (user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL) {
       return NextResponse.json(
         { error: 'Forbidden: Super admin access required' },
         { status: 403 }
       )
     }
+
+    // 🔒 获取 admin 客户端
+    const supabaseAdmin = getSupabaseAdmin()
 
     // 解析请求体
     const { targetUserId, newRole } = await request.json()
@@ -89,6 +85,9 @@ export async function POST(request: NextRequest) {
 
     // 记录操作日志（可选）
     console.log(`[AUDIT] Role change: ${targetUserId} → ${newRole} by ${user.id}`)
+
+    // 清理角色缓存，确保权限变更立即生效
+    clearCachedRole(targetUserId)
 
     return NextResponse.json({
       success: true,
