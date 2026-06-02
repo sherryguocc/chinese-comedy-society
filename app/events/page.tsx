@@ -30,6 +30,7 @@ export default function EventsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [selectedEvents, setSelectedEvents] = useState<Event[]>([])
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | EventType>('all')
 
   useEffect(() => {
     fetchEvents()
@@ -116,6 +117,10 @@ export default function EventsPage() {
 
     return <span className="break-all">{link}</span>
   }
+
+  const listEvents = events
+    .filter((event) => selectedTypeFilter === 'all' || event.event_type === selectedTypeFilter)
+    .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
 
   if (loading) {
     return (
@@ -240,8 +245,31 @@ export default function EventsPage() {
       ) : (
         /* 列表视图 */
         <div className="space-y-6">
-          {events.length > 0 ? (
-            events.map((event) => (
+          <div className="card bg-base-100 shadow-sm">
+            <div className="card-body gap-3">
+              <div className="text-sm font-semibold">筛选类型 / Filter by Type</div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className={`btn btn-sm ${selectedTypeFilter === 'all' ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => setSelectedTypeFilter('all')}
+                >
+                  全部 / All
+                </button>
+                {(Object.keys(EVENT_TYPE_NAMES) as EventType[]).map((type) => (
+                  <button
+                    key={type}
+                    className={`btn btn-sm ${selectedTypeFilter === type ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => setSelectedTypeFilter(type)}
+                  >
+                    {EVENT_TYPE_NAMES[type]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {listEvents.length > 0 ? (
+            listEvents.map((event) => (
               <div key={event.id} className={`card bg-base-100 shadow-xl ${isUpcoming(event.start_time) ? 'border-l-4 border-orange-500' : ''}`}>
                 <div className="card-body">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -305,11 +333,19 @@ export default function EventsPage() {
           ) : (
             <div className="text-center py-12 bg-base-200 rounded-lg">
               <div className="text-6xl mb-4">📅</div>
-              <h3 className="text-xl font-bold mb-2">暂无活动 / No events yet</h3>
+              <h3 className="text-xl font-bold mb-2">
+                {events.length > 0 ? '当前筛选下暂无活动 / No events for this filter' : '暂无活动 / No events yet'}
+              </h3>
               <p className="text-base-content/60">
-                目前还没有安排任何活动，请稍后再来查看。
-                <br />
-                No events scheduled yet. Please check back later.
+                {events.length > 0
+                  ? '请切换筛选条件查看其他类型活动。Switch filter options to see other event types.'
+                  : '目前还没有安排任何活动，请稍后再来查看。'}
+                {events.length === 0 && (
+                  <>
+                    <br />
+                    No events scheduled yet. Please check back later.
+                  </>
+                )}
               </p>
             </div>
           )}
