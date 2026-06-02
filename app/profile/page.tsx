@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { MemberOnly } from '@/components/PermissionGuard'
-import { canDownload } from '@/lib/permissions'
+import { getRoleDisplayName } from '@/lib/permissions'
 import { File } from '@/types/database'
 
 export default function FilesPage() {
@@ -60,16 +60,6 @@ export default function FilesPage() {
   useEffect(() => {
     fetchFiles()
   }, [])
-
-  const getRoleDisplayName = (role: string) => {
-    const roleNames = {
-      guest: '访客Guest',
-      member: '会员Member', 
-      admin: '管理员Admin',
-      super_admin: '超级管理员Super Admin'
-    }
-    return roleNames[role as keyof typeof roleNames] || role
-  }
 
   return (
     <MemberOnly

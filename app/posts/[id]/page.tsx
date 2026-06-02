@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { canComment } from '@/lib/permissions'
+import { canComment, getRoleDisplayName } from '@/lib/permissions'
 import { Post, Comment } from '@/types/database'
 
 export default function PostDetailPage() {
@@ -99,16 +99,6 @@ export default function PostDetailPage() {
     fetchPost()
     fetchComments()
   }, [postId])
-
-  const getRoleDisplayName = (role: string) => {
-    const roleNames = {
-      guest: '访客',
-      member: '会员',
-      admin: '管理员', 
-      super_admin: '超级管理员'
-    }
-    return roleNames[role as keyof typeof roleNames] || role
-  }
 
   if (loading) {
     return (

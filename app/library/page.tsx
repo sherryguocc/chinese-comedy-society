@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { canDownload } from '@/lib/permissions'
+import { canDownload, getRoleDisplayName } from '@/lib/permissions'
 import { File } from '@/types/database'
 
 export default function LibraryPage() {
@@ -66,16 +66,6 @@ export default function LibraryPage() {
   useEffect(() => {
     fetchFiles()
   }, [])
-
-  const getRoleDisplayName = (role: string) => {
-    const roleNames = {
-      guest: '访客',
-      member: '会员',
-      admin: '管理员',
-      super_admin: '超级管理员'
-    }
-    return roleNames[role as keyof typeof roleNames] || role
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">

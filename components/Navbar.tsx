@@ -2,21 +2,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { isAdmin, isSuperAdmin } from '@/lib/permissions'
+import { getRoleDisplayName, isAdmin, isSuperAdmin } from '@/lib/permissions'
 
 export default function Navbar() {
   const { user, userRole, signOut } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-
-  const getRoleDisplayName = (role: string) => {
-    const roleNames = {
-      guest: '访客',
-      member: '会员',
-      admin: '管理员',
-      super_admin: '超级管理员'
-    }
-    return roleNames[role as keyof typeof roleNames] || role
-  }
 
   return (
     <div className="navbar bg-base-100 shadow-lg">

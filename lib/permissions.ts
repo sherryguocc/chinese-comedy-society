@@ -63,6 +63,17 @@ export const isSuperAdmin = (role: UserRole | null) => role === 'super_admin'
 export const isAdmin = (role: UserRole | null) => ['admin', 'super_admin'].includes(role ?? '')
 export const isMember = (role: UserRole | null) => ['member', 'admin', 'super_admin'].includes(role ?? '')
 
+const roleDisplayNames: Record<UserRole, string> = {
+  guest: '访客Guest',
+  member: '会员Member',
+  admin: '管理员Admin',
+  super_admin: '超级管理员Super Admin',
+}
+
+export const getRoleDisplayName = (role: string) => {
+  return roleDisplayNames[role as UserRole] || role
+}
+
 // 动态生成权限判断函数
 export const canDownload = (role: UserRole | null) => hasPermission(role, PERMISSIONS.DOWNLOAD_FILES)
 export const canComment = (role: UserRole | null) => hasPermission(role, PERMISSIONS.CREATE_COMMENTS)
