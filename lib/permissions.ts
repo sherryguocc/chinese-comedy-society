@@ -1,6 +1,7 @@
 // types/roles.ts
 
 import { UserRole, Admin, Profile } from '@/types/database'
+import { supabase } from '@/lib/supabase'
 
 export type UserRoleData = {
   userRole: UserRole
@@ -95,9 +96,16 @@ export async function getUserRole(_userId?: string, forceRefresh = false): Promi
   try {
     console.log('🌐 [getUserRole] Fetching role from API for current user')
 
+    const { data: { session } } = await supabase.auth.getSession()
+    const accessToken = session?.access_token
+
     const response = await fetch('/api/auth/user-role', {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+      credentials: 'include',
     })
 
     if (!response.ok) {
