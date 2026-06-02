@@ -59,41 +59,26 @@ export default function EventsPage() {
   }
 
   const formatEventTime = (startTime: string, endTime?: string) => {
-    // 将数据库时间字符串作为本地时间处理
-    // 移除时区信息，将其作为本地时间解析
-    const parseAsLocalTime = (timeStr: string) => {
-      // 移除时区信息 (+00, Z, 等)
-      let cleanTimeStr = timeStr.replace(/[\+\-]\d{2}:?\d{2}$/, '').replace(/Z$/, '')
-      
-      // 确保格式为 YYYY-MM-DDTHH:mm:ss
-      if (cleanTimeStr.includes(' ')) {
-        cleanTimeStr = cleanTimeStr.replace(' ', 'T')
-      }
-      
-      // 添加秒如果缺失
-      if (!cleanTimeStr.includes(':') || cleanTimeStr.split(':').length < 3) {
-        if (cleanTimeStr.split(':').length === 2) {
-          cleanTimeStr += ':00'
-        }
-      }
-      
-      return new Date(cleanTimeStr)
-    }
+    const timezone = 'Pacific/Auckland'
+    const start = new Date(startTime)
 
-    const start = parseAsLocalTime(startTime)
-    const startStr = start.toLocaleDateString('zh-CN', {
+    const startStr = new Intl.DateTimeFormat('en-NZ', {
+      timeZone: timezone,
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(start)
 
     if (endTime) {
-      const end = parseAsLocalTime(endTime)
-      const endStr = end.toLocaleDateString('zh-CN', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      const end = new Date(endTime)
+      const endStr = new Intl.DateTimeFormat('en-NZ', {
+        timeZone: timezone,
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).format(end)
       return `${startStr} - ${endStr}`
     }
 
@@ -102,6 +87,16 @@ export default function EventsPage() {
 
   const isUpcoming = (startTime: string) => {
     return new Date(startTime) > new Date()
+  }
+
+  const formatSelectedDate = (date: Date) => {
+    return new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Pacific/Auckland',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+    }).format(date)
   }
 
   if (loading) {
@@ -159,12 +154,7 @@ export default function EventsPage() {
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <p className="text-xs text-gray-500 mb-2">所选日期 / Selected Date</p>
                 <h3 className="text-lg font-bold mb-4">
-                  {selectedDate.toLocaleDateString('zh-CN', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    weekday: 'long'
-                  })}
+                  {formatSelectedDate(selectedDate)}
                 </h3>
                 
                 {selectedEvents.length > 0 ? (
