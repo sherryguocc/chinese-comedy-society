@@ -134,9 +134,9 @@ export default function LibraryPage() {
                       ) : (
                         <button
                           className="btn btn-disabled btn-sm"
-                          title="需要会员权限 Member Access Required"
+                          title="会员专属 Members only"
                         >
-                          需要会员权限 Member Access Required
+                          会员专属 Members only
                         </button>
                       )}
                     </div>
