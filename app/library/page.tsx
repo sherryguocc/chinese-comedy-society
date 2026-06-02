@@ -73,9 +73,9 @@ export default function LibraryPage() {
         <div>
           <h1 className="text-3xl font-bold">资料库 Library</h1>
           <p className="text-base-content/60 mt-2">
-            当前用户Current User: {user?.email || '未登录 Not Logged In'} | 
-            角色Role: {getRoleDisplayName(userRole || 'guest')} |
-            下载权限Download Permission: {userCanDownload ? '✅' : '❌'}
+            当前用户 / Current user: {user?.email || '未登录 / Not logged in'} | 
+            角色 / Role: {getRoleDisplayName(userRole || 'guest')} |
+            下载权限 / Download: {userCanDownload ? '✅' : '❌'}
           </p>
         </div>
       </div>
@@ -119,7 +119,7 @@ export default function LibraryPage() {
                     <div className="text-xs text-base-content/60 space-y-1">
                       <div>📁 {file.file_name}</div>
                       <div>📏 {(file.file_size / 1024 / 1024).toFixed(2)} MB</div>
-                      <div>👤 上传者: {file.uploader?.full_name || '未知'}</div>
+                      <div>👤 上传者 / Uploader: {file.uploader?.full_name || '未知 / Unknown'}</div>
                       <div>📅 {new Date(file.created_at).toLocaleDateString()}</div>
                     </div>
 
@@ -129,14 +129,14 @@ export default function LibraryPage() {
                           onClick={() => handleDownload(file)}
                           className="btn btn-primary btn-sm"
                         >
-                          下载 Download
+                          下载 / Download
                         </button>
                       ) : (
                         <button
                           className="btn btn-disabled btn-sm"
                           title="会员专属 Members only"
                         >
-                          会员专属 Members only
+                          会员 / Members
                         </button>
                       )}
                     </div>
@@ -147,8 +147,8 @@ export default function LibraryPage() {
           ) : (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📚</div>
-              <h3 className="text-xl font-bold mb-2">暂无文件</h3>
-              <p className="text-base-content/60">资料库还没有文件。</p>
+              <h3 className="text-xl font-bold mb-2">暂无文件 / No files yet</h3>
+              <p className="text-base-content/60">资料库还没有文件。 / No files in the library yet.</p>
             </div>
           )}
         </>

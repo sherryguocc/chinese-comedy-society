@@ -5,13 +5,13 @@ import { supabase } from '@/lib/supabase'
 import { Event, EventType } from '@/types/database'
 import EventCalendar from '@/components/EventCalendar'
 
-// 活动类型中文名称
+// 活动类型名称
 const EVENT_TYPE_NAMES: Record<EventType, string> = {
-  show: '演出Show',
-  openmic: '开放麦Open Mic',
-  training: '培训Training',
-  meetup: '聚会Meetup',
-  readingsession: '读稿会Discussion Session'
+  show: '演出 / Show',
+  openmic: '开放麦 / Open Mic',
+  training: '培训 / Training',
+  meetup: '聚会 / Meetup',
+  readingsession: '读稿会 / Discussion Session'
 }
 
 // 活动类型图标
@@ -120,24 +120,24 @@ export default function EventsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">活动日历 Events Calendar</h1>
-          <p className="text-base-content/60">
-            查看华人喜剧协会的活动安排
-            Here are all Chinese Comedy events held by multiple organisers in New Zealand.
-          </p>
+          <div className="text-base-content/60 space-y-1">
+            <p>查看华人喜剧协会的活动安排</p>
+            <p>Browse upcoming Chinese Comedy Society events across New Zealand.</p>
+          </div>
         </div>
         
-        <div className="tabs tabs-boxed">
+        <div className="tabs tabs-boxed w-full md:w-auto mt-4 md:mt-0">
           <button 
-            className={`tab ${viewMode === 'calendar' ? 'tab-active' : ''}`}
+            className={`tab py-2 px-3 text-xs sm:text-sm ${viewMode === 'calendar' ? 'tab-active' : ''}`}
             onClick={() => setViewMode('calendar')}
           >
-            📅 日历视图
+            📅 日历 / Calendar
           </button>
           <button 
-            className={`tab ${viewMode === 'list' ? 'tab-active' : ''}`}
+            className={`tab py-2 px-3 text-xs sm:text-sm ${viewMode === 'list' ? 'tab-active' : ''}`}
             onClick={() => setViewMode('list')}
           >
-            📋 列表视图
+            📋 列表 / List
           </button>
         </div>
       </div>
@@ -157,6 +157,7 @@ export default function EventsPage() {
           <div className="lg:col-span-1">
             {selectedDate ? (
               <div className="bg-white rounded-lg shadow-lg p-6">
+                <p className="text-xs text-gray-500 mb-2">所选日期 / Selected Date</p>
                 <h3 className="text-lg font-bold mb-4">
                   {selectedDate.toLocaleDateString('zh-CN', {
                     year: 'numeric',
@@ -205,14 +206,14 @@ export default function EventsPage() {
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     <div className="text-4xl mb-2">📅</div>
-                    <p>这一天没有活动安排</p>
+                    <p>这一天没有活动安排 / No events on this day</p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-lg p-6 text-center text-gray-500">
                 <div className="text-4xl mb-2">👆</div>
-                <p>点击日历上的日期查看当天活动</p>
+                <p>点击日历上的日期查看当天活动 / Click a date to view events</p>
               </div>
             )}
           </div>
@@ -243,7 +244,7 @@ export default function EventsPage() {
                           <span>⏰</span>
                           <span>{formatEventTime(event.start_time, event.end_time)}</span>
                           {isUpcoming(event.start_time) && (
-                            <span className="badge badge-success badge-sm">即将举行</span>
+                            <span className="badge badge-success badge-sm">即将举行 / Upcoming</span>
                           )}
                         </div>
                         
@@ -275,7 +276,7 @@ export default function EventsPage() {
           ) : (
             <div className="text-center py-12 bg-base-200 rounded-lg">
               <div className="text-6xl mb-4">📅</div>
-              <h3 className="text-xl font-bold mb-2">暂无活动</h3>
+              <h3 className="text-xl font-bold mb-2">暂无活动 / No events yet</h3>
               <p className="text-base-content/60">
                 目前还没有安排任何活动，请稍后再来查看。
                 <br />

@@ -65,10 +65,11 @@ export default function FilesPage() {
     <MemberOnly
       fallback={
         <div className="container mx-auto px-4 py-8 text-center">
-          <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>
+          <h1 className="text-2xl font-bold text-red-500">权限不足 / Access denied</h1>
           <p className="mt-4">您需要会员及以上权限才能访问文件页面。</p>
+          <p>You need member access or higher to open the files page.</p>
           <p className="text-sm text-base-content/60 mt-2">
-            当前角色: {getRoleDisplayName(userRole || 'guest')}
+            当前角色 / Role: {getRoleDisplayName(userRole || 'guest')}
           </p>
         </div>
       }
@@ -78,7 +79,7 @@ export default function FilesPage() {
           <div>
             <h1 className="text-3xl font-bold">文件管理 Files</h1>
             <p className="text-base-content/60 mt-2">
-              当前角色: {getRoleDisplayName(userRole || 'guest')}
+              当前角色 / Role: {getRoleDisplayName(userRole || 'guest')}
             </p>
           </div>
         </div>
@@ -117,14 +118,14 @@ export default function FilesPage() {
                     <td className="font-medium">{file.title}</td>
                     <td>{file.file_name}</td>
                     <td>{(file.file_size / 1024 / 1024).toFixed(2)} MB</td>
-                    <td>{file.uploader?.full_name || '未知'}</td>
+                    <td>{file.uploader?.full_name || '未知 / Unknown'}</td>
                     <td>{new Date(file.created_at).toLocaleDateString()}</td>
                     <td>
                       <button
                         onClick={() => handleDownload(file)}
                         className="btn btn-sm btn-outline"
                       >
-                        下载 Download
+                        下载 / Download
                       </button>
                     </td>
                   </tr>
@@ -135,8 +136,8 @@ export default function FilesPage() {
             {files.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📁</div>
-                <h3 className="text-xl font-bold mb-2">暂无文件</h3>
-                <p className="text-base-content/60">还没有文件上传。</p>
+                <h3 className="text-xl font-bold mb-2">暂无文件 / No files yet</h3>
+                <p className="text-base-content/60">还没有文件上传。 / No files uploaded yet.</p>
               </div>
             )}
           </div>

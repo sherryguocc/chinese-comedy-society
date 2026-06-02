@@ -24,15 +24,15 @@ export default function Navbar() {
           </div>
           {isMenuOpen && (
             <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-              <li><Link href="/">首页 Home</Link></li>
-              <li><Link href="/posts">文章 Posts</Link></li>
-              <li><Link href="/events">活动 Events</Link></li>
-              <li><Link href="/library">资料库 Library</Link></li>
+              <li><Link href="/">首页 / Home</Link></li>
+              <li><Link href="/posts">文章 / Posts</Link></li>
+              <li><Link href="/events">活动 / Events</Link></li>
+              <li><Link href="/library">资料库 / Library</Link></li>
               {['member', 'admin', 'super_admin'].includes(userRole || '') && (
-                <li><Link href="/files">文件 Files</Link></li>
+                <li><Link href="/files">文件 / Files</Link></li>
               )}
               {isAdmin(userRole) && (
-                <li><Link href="/admin/dashboard">管理后台 Admin</Link></li>
+                <li><Link href="/admin/dashboard">后台 / Admin</Link></li>
               )}
             </ul>
           )}
@@ -42,15 +42,15 @@ export default function Navbar() {
       
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
-          <li><Link href="/">首页 Home</Link></li>
-          <li><Link href="/posts">文章 Posts</Link></li>
-          <li><Link href="/events">活动 Events</Link></li>
-          <li><Link href="/library">资料库 Library</Link></li>
+          <li><Link href="/">首页 / Home</Link></li>
+          <li><Link href="/posts">文章 / Posts</Link></li>
+          <li><Link href="/events">活动 / Events</Link></li>
+          <li><Link href="/library">资料库 / Library</Link></li>
           {['member', 'admin', 'super_admin'].includes(userRole || '') && (
-            <li><Link href="/files">文件 Files</Link></li>
+            <li><Link href="/files">文件 / Files</Link></li>
           )}
           {isAdmin(userRole) && (
-            <li><Link href="/admin/dashboard">管理后台 Admin</Link></li>
+            <li><Link href="/admin/dashboard">后台 / Admin</Link></li>
           )}
         </ul>
       </div>
@@ -73,17 +73,17 @@ export default function Navbar() {
                 </span>
               </li>
               <li><hr/></li>
-              <li><Link href="/profile">个人设置 Profile</Link></li>
+              <li><Link href="/profile">设置 / Profile</Link></li>
               {isSuperAdmin(userRole) && (
-                <li><Link href="/admin/users">用户管理 Users</Link></li>
+                <li><Link href="/admin/users">用户 / Users</Link></li>
               )}
-              <li><button onClick={signOut}>登出 Logout</button></li>
+              <li><button onClick={signOut}>登出 / Logout</button></li>
             </ul>
           </div>
         ) : (
           <div className="flex gap-2">
-            <Link href="/auth/login" className="btn btn-ghost">登录 Login</Link>
-            <Link href="/auth/register" className="btn btn-primary">注册 Register</Link>
+            <Link href="/auth/login" className="btn btn-ghost">登录 / Login</Link>
+            <Link href="/auth/register" className="btn btn-primary">注册 / Register</Link>
           </div>
         )}
       </div>
