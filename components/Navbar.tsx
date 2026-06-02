@@ -9,8 +9,8 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <div className="navbar bg-base-100 shadow-lg">
-      <div className="navbar-start">
+    <div className="navbar bg-base-100 shadow-lg flex-wrap lg:flex-nowrap items-start lg:items-center gap-y-2">
+      <div className="navbar-start w-full lg:w-auto">
         <div className="dropdown">
           <div 
             tabIndex={0} 
@@ -37,7 +37,7 @@ export default function Navbar() {
             </ul>
           )}
         </div>
-        <Link href="/" className="btn btn-ghost text-xl">Chinese Comedy Society</Link>
+        <Link href="/" className="btn btn-ghost text-sm sm:text-base lg:text-xl px-2 sm:px-3 leading-tight whitespace-normal">Chinese Comedy Society</Link>
       </div>
       
       <div className="navbar-center hidden lg:flex">
@@ -55,7 +55,7 @@ export default function Navbar() {
         </ul>
       </div>
       
-      <div className="navbar-end">
+      <div className="navbar-end w-full lg:w-auto justify-end">
         {user ? (
           <div className="dropdown dropdown-end">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
@@ -81,9 +81,9 @@ export default function Navbar() {
             </ul>
           </div>
         ) : (
-          <div className="flex gap-2">
-            <Link href="/auth/login" className="btn btn-ghost">登录 / Login</Link>
-            <Link href="/auth/register" className="btn btn-primary">注册 / Register</Link>
+          <div className="flex w-full justify-end gap-2">
+            <Link href="/auth/login" className="btn btn-ghost btn-sm text-xs sm:text-sm">登录 / Login</Link>
+            <Link href="/auth/register" className="btn btn-primary btn-sm text-xs sm:text-sm">注册 / Register</Link>
           </div>
         )}
       </div>

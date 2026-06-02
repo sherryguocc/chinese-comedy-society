@@ -6,8 +6,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { EventType } from '@/types/database'
 import { isAdmin } from '@/lib/permissions'
-import Link from 'next/link'
 import AdminLayout from '@/components/AdminLayout'
+import AccessDeniedPanel from '@/components/AccessDeniedPanel'
 
 // 活动类型选项
 const EVENT_TYPE_OPTIONS: { value: EventType; label: string; icon: string; description: string }[] = [
@@ -172,26 +172,11 @@ export default function CreateEvent() {
   // 如果没有用户或不是管理员
   if (!user || !isAdmin(userRole)) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>
-        <p className="mt-4">您没有创建活动的权限。You don't have permission to create events.</p>
-        <div className="mt-6 space-x-4">
-          <button 
-            onClick={() => router.push('/')}
-            className="btn btn-primary"
-          >
-            返回首页 Back to Home
-          </button>
-          {!user && (
-            <button 
-              onClick={() => router.push('/auth/login')}
-              className="btn btn-outline"
-            >
-              登录 Login
-            </button>
-          )}
-        </div>
-      </div>
+      <AccessDeniedPanel
+        messageZh="您没有创建活动的权限。"
+        messageEn="You don't have permission to create events."
+        showLoginButton={!user}
+      />
     )
   }
 

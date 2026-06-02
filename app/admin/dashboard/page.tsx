@@ -7,6 +7,7 @@ import { AdminOnly } from '@/components/PermissionGuard'
 import { hasPermission } from '@/lib/permissions'
 import { File } from '@/types/database'
 import Link from 'next/link'
+import AccessDeniedPanel from '@/components/AccessDeniedPanel'
 
 export default function AdminDashboardPage() {
   const { user, userRole } = useAuth()
@@ -46,13 +47,10 @@ export default function AdminDashboardPage() {
   return (
     <AdminOnly
       fallback={
-        <div className="container mx-auto px-4 py-8 text-center">
-          <h1 className="text-2xl font-bold text-red-500">权限不足 Access Denied</h1>
-          <p className="mt-4">您需要管理员权限才能访问此页面。</p>
-          <Link href="/" className="btn btn-primary mt-6">
-            返回首页 Back to Home
-          </Link>
-        </div>
+        <AccessDeniedPanel
+          messageZh="您需要管理员权限才能访问此页面。"
+          messageEn="You need admin access to view this page."
+        />
       }
     >
       <div className="container mx-auto px-4 py-8">
