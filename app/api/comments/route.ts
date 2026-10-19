@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
+import { requireRole, PUBLIC_PROFILE_FIELDS } from '@/lib/server-auth'
 
+const COMMENT_SELECT = `*, author:profiles(${PUBLIC_PROFILE_FIELDS})`
+
+// 评论对所有人可见，只返回作者的公开字段
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const postId = searchParams.get('postId')
+    const postId = new URL(request.url).searchParams.get('postId')
 
     if (!postId) {
       return NextResponse.json(
@@ -13,12 +16,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('comments')
-      .select(`
-        *,
-        author:profiles(id, email, username, full_name, phone_number, role, created_at)
-      `)
+      .select(COMMENT_SELECT)
       .eq('post_id', postId)
       .order('created_at', { ascending: true })
 
@@ -40,49 +40,36 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// 发表评论：仅会员及以上；作者身份从 token 中取，不信任请求体
 export async function POST(request: NextRequest) {
   try {
-    const { content, postId, authorId } = await request.json()
+    const auth = await requireRole(request, 'member')
+    if (auth instanceof NextResponse) return auth
 
-    if (!content || !postId || !authorId) {
+    const { content, postId } = await request.json()
+    const trimmed = typeof content === 'string' ? content.trim() : ''
+
+    if (!trimmed || !postId) {
       return NextResponse.json(
-        { error: 'Content, post ID, and author ID are required' },
+        { error: 'Content and post ID are required' },
         { status: 400 }
       )
     }
 
-    // Verify user is a member or admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', authorId)
-      .single()
-
-    if (profileError || !profile) {
+    if (trimmed.length > 2000) {
       return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+        { error: 'Comment is too long (max 2000 characters)' },
+        { status: 400 }
       )
     }
 
-    if (!['member', 'admin'].includes((profile as any).role)) {
-      return NextResponse.json(
-        { error: 'Only members can post comments' },
-        { status: 403 }
-      )
-    }
-
-    const { data, error } = await (supabase as any)
-      .from('comments')
+    const { data, error } = await (getSupabaseAdmin().from('comments') as any)
       .insert({
-        content,
+        content: trimmed,
         post_id: postId,
-        author_id: authorId,
+        author_id: auth.user.id,
       })
-      .select(`
-        *,
-        author:profiles(id, email, username, full_name, phone_number, role, created_at)
-      `)
+      .select(COMMENT_SELECT)
       .single()
 
     if (error) {

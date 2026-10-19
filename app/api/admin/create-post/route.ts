@@ -1,81 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { getSupabaseAdmin } from '@/lib/supabase'
+import { requireRole } from '@/lib/server-auth'
 
-const SUPER_ADMIN_EMAIL = 'sherryguocc@gmail.com'
-
+// 发布文章：仅 admin / super_admin。作者固定为当前登录用户。
 export async function POST(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
-
   try {
-    // Verify the user is authenticated
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
+    const auth = await requireRole(request, 'admin')
+    if (auth instanceof NextResponse) return auth
+
+    const { title, content } = await request.json()
+
+    if (!title?.trim() || !content?.trim()) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Title and content are required' },
+        { status: 400 }
       )
     }
 
-    // Get the post data from the request
-    const { title, content, author_id } = await request.json()
-
-    // Verify the user is trying to create a post as themselves
-    if (author_id !== user.id) {
-      return NextResponse.json(
-        { error: 'Cannot create post for another user' },
-        { status: 403 }
-      )
-    }
-
-    // Verify user has the right role
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
-    }
-
-    const isSuperAdmin = user.email?.toLowerCase() === SUPER_ADMIN_EMAIL
-
-    if (!isSuperAdmin && profile.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      )
-    }
-
-    // Create the post
-    const { data, error } = await supabase
-      .from('posts')
+    const { data, error } = await (getSupabaseAdmin().from('posts') as any)
       .insert({
-        title,
+        title: title.trim(),
         content,
-        author_id
+        author_id: auth.user.id,
       })
       .select()
 
     if (error) {
       console.error('Database error:', error)
       return NextResponse.json(
-        { error: error.message, code: error.code },
+        { error: 'Failed to create post' },
         { status: 500 }
       )
     }
 
     return NextResponse.json({ data })
-
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API error:', error)
     return NextResponse.json(
-      { error: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

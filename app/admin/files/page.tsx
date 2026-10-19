@@ -45,7 +45,7 @@ export default function FileManagementPage() {
         .from('files')
         .select(`
           *,
-          uploader:profiles(id, email, username, full_name, phone_number, role, created_at)
+          uploader:profiles(id, full_name, username, role)
         `)
         .order('created_at', { ascending: false })
 
@@ -529,7 +529,7 @@ export default function FileManagementPage() {
                       <td className="text-sm">{file.file_name}</td>
                       <td className="text-sm">{formatFileSize(file.file_size)}</td>
                       <td className="text-sm">{file.file_type.split('/')[1]?.toUpperCase()}</td>
-                      <td className="text-sm">{file.uploader?.full_name || file.uploader?.email}</td>
+                      <td className="text-sm">{file.uploader?.full_name || file.uploader?.username || '—'}</td>
                       <td className="text-sm">{new Date(file.created_at).toLocaleDateString()}</td>
                       <td>
                         <div className="flex gap-2">

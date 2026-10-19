@@ -178,10 +178,12 @@ export default function CreatePost() {
           // Always try API route as fallback for any error
           console.log('Direct insert failed, trying API route...')
           try {
+            const { data: { session } } = await supabase.auth.getSession()
             const apiResponse = await fetch('/api/admin/create-post', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
               },
               body: JSON.stringify(insertData)
             })

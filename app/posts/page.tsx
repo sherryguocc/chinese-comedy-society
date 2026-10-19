@@ -21,7 +21,7 @@ export default function PostsPage() {
         .from('posts')
         .select(`
           *,
-          author:profiles(id, email, username, full_name, phone_number, role, created_at)
+          author:profiles(id, full_name, username, role)
         `)
         // 暂时移除 published 过滤，直到数据库表更新
         // .eq('published', true)
@@ -78,7 +78,7 @@ export default function PostsPage() {
                 />
                 <div className="card-actions justify-between items-center mt-4">
                   <div className="text-sm text-base-content/60">
-                    <div>作者: {post.author?.full_name || post.author?.email}</div>
+                    <div>作者: {post.author?.full_name || post.author?.username || '—'}</div>
                     <div>发布: {new Date(post.created_at).toLocaleDateString()}</div>
                   </div>
                   <Link href={`/posts/${post.id}`} className="btn btn-primary btn-sm">

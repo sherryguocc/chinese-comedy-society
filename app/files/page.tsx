@@ -25,7 +25,7 @@ export default function FilesViewPage() {
         .from('files')
         .select(`
           *,
-          uploader:profiles(id, email, username, full_name, phone_number, role, created_at)
+          uploader:profiles(id, full_name, username, role)
         `)
         .order('created_at', { ascending: false })
 
@@ -222,7 +222,7 @@ export default function FilesViewPage() {
                     <div>文件名: {file.file_name}</div>
                     <div>大小: {formatFileSize(file.file_size)}</div>
                     <div>类型: {file.file_type.split('/')[1]?.toUpperCase()}</div>
-                    <div>上传者: {file.uploader?.full_name || file.uploader?.email}</div>
+                    <div>上传者: {file.uploader?.full_name || file.uploader?.username || '—'}</div>
                     <div>上传时间: {new Date(file.created_at).toLocaleDateString()}</div>
                   </div>
 

@@ -24,7 +24,7 @@ export default function LatestPostsSection({ initialPosts }: LatestPostsSectionP
         .from('posts')
         .select(`
           *,
-          author:profiles(id, email, username, full_name, phone_number, role, created_at)
+          author:profiles(id, full_name, username, role)
         `)
         .order('created_at', { ascending: false })
         .limit(5)
@@ -93,7 +93,7 @@ export default function LatestPostsSection({ initialPosts }: LatestPostsSectionP
                 </p>
                 <div className="card-actions justify-between items-center mt-4">
                   <div className="text-sm text-base-content/60">
-                    By {post.author?.full_name || post.author?.email || 'Unknown'}
+                    By {post.author?.full_name || post.author?.username || 'Unknown'}
                   </div>
                   <Link href={`/posts/${post.id}`} className="btn btn-primary btn-sm">
                     阅读更多 Read More

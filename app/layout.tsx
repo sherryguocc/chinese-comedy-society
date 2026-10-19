@@ -5,11 +5,6 @@ import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import Navbar from '@/components/Navbar'
 
-// Import debug utilities in development
-if (process.env.NODE_ENV === 'development') {
-  import('@/utils/debug')
-}
-
 const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({

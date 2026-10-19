@@ -1,5 +1,5 @@
-// 严格的小写角色类型 - profiles 表包括三种role
-export type ProfileRole = 'guest' | 'member' | 'admin'
+// 角色类型 - profiles.role 是角色的唯一来源（super_admin 也存在数据库中）
+export type ProfileRole = 'guest' | 'member' | 'admin' | 'super_admin'
 // Admin 相关类型
 export type AdminPermissions = {
   manage_users?: boolean
@@ -24,8 +24,7 @@ export interface Admin {
   id: string // 只存储 super admin 的 UUID
 }
 
-// 扩展的用户角色类型，比ProfileRole多了 super_admin
-export type UserRole = ProfileRole | 'super_admin'
+export type UserRole = ProfileRole
 
 export interface Post {
   id: string

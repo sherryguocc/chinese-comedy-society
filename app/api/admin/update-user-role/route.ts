@@ -1,45 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, getSupabaseAdmin } from '@/lib/supabase'
-import { Database } from '@/types/database'
-import { clearCachedRole } from '@/lib/cache'
+import { getSupabaseAdmin } from '@/lib/supabase'
+import { requireRole } from '@/lib/server-auth'
+import { isSuperAdmin } from '@/lib/permissions'
+import type { UserRole } from '@/types/database'
 
-type ProfileRole = Database['public']['Tables']['profiles']['Row']['role']
-const SUPER_ADMIN_EMAIL = 'sherryguocc@gmail.com'
+// 规则：
+// - admin / super_admin 都可以在 guest ⇄ member 之间切换
+// - 只有 super_admin 可以把人设为 admin，或修改已有 admin 的角色
+// - super_admin 不能通过 API 设置或修改（只在数据库中设置）
+// - 不能修改自己的角色
+const ASSIGNABLE_ROLES: UserRole[] = ['guest', 'member', 'admin']
 
-// POST 方法：修改用户角色（只有 super_admin 可以操作）
 export async function POST(request: NextRequest) {
   try {
-    // 验证请求者身份
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Missing or invalid token' },
-        { status: 401 }
-      )
-    }
+    const auth = await requireRole(request, 'admin')
+    if (auth instanceof NextResponse) return auth
 
-    const token = authHeader.substring(7)
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized: Invalid token' },
-        { status: 401 }
-      )
-    }
-
-    // super_admin 只通过固定邮箱判定
-    if (user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL) {
-      return NextResponse.json(
-        { error: 'Forbidden: Super admin access required' },
-        { status: 403 }
-      )
-    }
-
-    // 🔒 获取 admin 客户端
-    const supabaseAdmin = getSupabaseAdmin()
-
-    // 解析请求体
     const { targetUserId, newRole } = await request.json()
 
     if (!targetUserId || !newRole) {
@@ -49,23 +25,55 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 验证角色值
-    const validRoles: ProfileRole[] = ['guest', 'member', 'admin']
-    if (!validRoles.includes(newRole)) {
+    if (!ASSIGNABLE_ROLES.includes(newRole)) {
       return NextResponse.json(
         { error: 'Invalid role. Must be: guest, member, or admin' },
         { status: 400 }
       )
     }
 
-    console.log(`[API] Super admin ${user.id} changing user ${targetUserId} role to ${newRole}`)
+    if (targetUserId === auth.user.id) {
+      return NextResponse.json(
+        { error: 'You cannot change your own role' },
+        { status: 400 }
+      )
+    }
 
-    // 更新用户角色
+    const supabaseAdmin = getSupabaseAdmin()
+
+    const { data: target } = await supabaseAdmin
+      .from('profiles')
+      .select('id, role')
+      .eq('id', targetUserId)
+      .maybeSingle() as { data: { id: string; role: UserRole } | null }
+
+    if (!target) {
+      return NextResponse.json(
+        { error: 'User not found in profiles table' },
+        { status: 404 }
+      )
+    }
+
+    if (target.role === 'super_admin') {
+      return NextResponse.json(
+        { error: 'Super admin role cannot be changed via API' },
+        { status: 403 }
+      )
+    }
+
+    const touchesAdmin = newRole === 'admin' || target.role === 'admin'
+    if (touchesAdmin && !isSuperAdmin(auth.role)) {
+      return NextResponse.json(
+        { error: 'Only the super admin can grant or revoke admin role' },
+        { status: 403 }
+      )
+    }
+
     const { data: updatedProfile, error: updateError } = await (supabaseAdmin
       .from('profiles') as any)
       .update({ role: newRole })
       .eq('id', targetUserId)
-      .select()
+      .select('id, full_name, email, role')
       .maybeSingle()
 
     if (updateError) {
@@ -76,28 +84,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!updatedProfile) {
-      return NextResponse.json(
-        { error: 'User not found in profiles table' },
-        { status: 404 }
-      )
-    }
-
-    // 记录操作日志（可选）
-    console.log(`[AUDIT] Role change: ${targetUserId} → ${newRole} by ${user.id}`)
-
-    // 清理角色缓存，确保权限变更立即生效
-    clearCachedRole(targetUserId)
+    console.log(`[AUDIT] Role change: ${targetUserId} ${target.role} → ${newRole} by ${auth.user.id}`)
 
     return NextResponse.json({
       success: true,
       message: `User role updated to ${newRole}`,
-      profile: updatedProfile
+      profile: updatedProfile,
     })
-
   } catch (error: unknown) {
-    const err = error as Error
-    console.error('[API] Error updating user role:', err.message)
+    console.error('[API] Error updating user role:', (error as Error).message)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
