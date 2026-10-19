@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { hasPermission, isAdmin } from '@/lib/permissions'
+import { hasPermission } from '@/lib/permissions'
 import AdminLayout from '@/components/AdminLayout'
 import type { File } from '@/types/database'
 
@@ -19,7 +19,14 @@ export default function AdminDashboardPage() {
 
   const cards = [
     { href: '/admin/posts/create', icon: '📝', title: '创建文章 New Post', desc: '发布新的文章内容', show: hasPermission(userRole, 'CREATE_POSTS') },
-    { href: '/admin/events/create', icon: '📅', title: '创建活动 New Event', desc: '发布新的活动信息', show: hasPermission(userRole, 'CREATE_EVENTS') },
+    {
+      href: '/admin/events',
+      icon: '📅',
+      title: hasPermission(userRole, 'EDIT_ALL_EVENTS') ? '活动管理 Events' : '我的活动 My Events',
+      desc: hasPermission(userRole, 'EDIT_ALL_EVENTS') ? '查看、编辑和删除所有活动' : '查看、编辑和删除我发布的活动',
+      show: hasPermission(userRole, 'CREATE_EVENTS'),
+    },
+    { href: '/admin/events/create', icon: '➕', title: '创建活动 New Event', desc: '发布新的活动信息', show: hasPermission(userRole, 'CREATE_EVENTS') },
     { href: '/admin/files', icon: '📁', title: '文件管理 Files', desc: '上传、重命名和删除文件', show: hasPermission(userRole, 'UPLOAD_FILES') },
     { href: '/admin/users', icon: '👥', title: '用户管理 Users', desc: '审批新会员、管理角色', show: hasPermission(userRole, 'MANAGE_USERS') },
   ]
@@ -42,9 +49,11 @@ export default function AdminDashboardPage() {
     }
   }
 
+  const canSeeFiles = hasPermission(userRole, 'UPLOAD_FILES')
+
   useEffect(() => {
-    if (isAdmin(userRole)) fetchFiles()
-  }, [userRole])
+    if (canSeeFiles) fetchFiles()
+  }, [canSeeFiles])
 
   return (
     <AdminLayout title="管理后台 Admin Dashboard">
@@ -63,6 +72,7 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
+      {canSeeFiles && (
       <div className="card bg-base-100 shadow border border-base-200">
         <div className="card-body">
           <div className="flex justify-between items-center mb-2">
@@ -105,6 +115,7 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
+      )}
     </AdminLayout>
   )
 }

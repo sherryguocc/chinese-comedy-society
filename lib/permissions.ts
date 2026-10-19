@@ -15,43 +15,37 @@ export const PERMISSIONS = {
   DOWNLOAD_FILES: 'DOWNLOAD_FILES',
   CREATE_COMMENTS: 'CREATE_COMMENTS',
   CREATE_POSTS: 'CREATE_POSTS',
-  CREATE_EVENTS: 'CREATE_EVENTS',
+  CREATE_EVENTS: 'CREATE_EVENTS',       // 发布活动 + 编辑/删除自己发布的活动
+  EDIT_ALL_EVENTS: 'EDIT_ALL_EVENTS',   // 编辑/删除任何人发布的活动
   UPLOAD_FILES: 'UPLOAD_FILES',
-  MANAGE_USERS: 'MANAGE_USERS',
-  MANAGE_ADMINS: 'MANAGE_ADMINS',
+  MANAGE_USERS: 'MANAGE_USERS',         // guest ⇄ member ⇄ event_manager
+  MANAGE_ADMINS: 'MANAGE_ADMINS',       // 任免 admin
   SYSTEM_SETTINGS: 'SYSTEM_SETTINGS',
 } as const
 
 export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS]
 
-// 角色对应权限映射
+// 角色层级：guest < member < event_manager < admin < super_admin
+const MEMBER_PERMS: Permission[] = [
+  PERMISSIONS.VIEW_CONTENT,
+  PERMISSIONS.DOWNLOAD_FILES,
+  PERMISSIONS.CREATE_COMMENTS,
+]
+const EVENT_MANAGER_PERMS: Permission[] = [...MEMBER_PERMS, PERMISSIONS.CREATE_EVENTS]
+const ADMIN_PERMS: Permission[] = [
+  ...EVENT_MANAGER_PERMS,
+  PERMISSIONS.EDIT_ALL_EVENTS,
+  PERMISSIONS.CREATE_POSTS,
+  PERMISSIONS.UPLOAD_FILES,
+  PERMISSIONS.MANAGE_USERS,
+]
+
 const rolePermissions: Record<UserRole, Permission[]> = {
   guest: [PERMISSIONS.VIEW_CONTENT],
-  member: [
-    PERMISSIONS.VIEW_CONTENT,
-    PERMISSIONS.DOWNLOAD_FILES,
-    PERMISSIONS.CREATE_COMMENTS,
-  ],
-  admin: [
-    PERMISSIONS.VIEW_CONTENT,
-    PERMISSIONS.DOWNLOAD_FILES,
-    PERMISSIONS.CREATE_COMMENTS,
-    PERMISSIONS.CREATE_POSTS,
-    PERMISSIONS.CREATE_EVENTS,
-    PERMISSIONS.UPLOAD_FILES,
-    PERMISSIONS.MANAGE_USERS, // admin 可在 guest ⇄ member 之间切换；任免 admin 需要 MANAGE_ADMINS
-  ],
-  super_admin: [
-    PERMISSIONS.VIEW_CONTENT,
-    PERMISSIONS.DOWNLOAD_FILES,
-    PERMISSIONS.CREATE_COMMENTS,
-    PERMISSIONS.CREATE_POSTS,
-    PERMISSIONS.CREATE_EVENTS,
-    PERMISSIONS.UPLOAD_FILES,
-    PERMISSIONS.MANAGE_USERS,
-    PERMISSIONS.MANAGE_ADMINS,
-    PERMISSIONS.SYSTEM_SETTINGS,
-  ],
+  member: MEMBER_PERMS,
+  event_manager: EVENT_MANAGER_PERMS,
+  admin: ADMIN_PERMS,
+  super_admin: [...ADMIN_PERMS, PERMISSIONS.MANAGE_ADMINS, PERMISSIONS.SYSTEM_SETTINGS],
 }
 
 // 权限判断函数
@@ -63,11 +57,17 @@ export const hasPermission = (userRole: UserRole | null, permission: Permission)
 // 角色辅助函数
 export const isSuperAdmin = (role: UserRole | null) => role === 'super_admin'
 export const isAdmin = (role: UserRole | null) => ['admin', 'super_admin'].includes(role ?? '')
-export const isMember = (role: UserRole | null) => ['member', 'admin', 'super_admin'].includes(role ?? '')
+export const isMember = (role: UserRole | null) =>
+  ['member', 'event_manager', 'admin', 'super_admin'].includes(role ?? '')
+export const isEventManagerOrAbove = (role: UserRole | null) =>
+  ['event_manager', 'admin', 'super_admin'].includes(role ?? '')
+/** 能否进入后台（admin 看到全部功能，event_manager 只看到活动） */
+export const canAccessAdminArea = isEventManagerOrAbove
 
 const roleDisplayNames: Record<UserRole, string> = {
   guest: '访客Guest',
   member: '会员Member',
+  event_manager: '活动管理员Event Manager',
   admin: '管理员Admin',
   super_admin: '超级管理员Super Admin',
 }
@@ -81,6 +81,11 @@ export const canDownload = (role: UserRole | null) => hasPermission(role, PERMIS
 export const canComment = (role: UserRole | null) => hasPermission(role, PERMISSIONS.CREATE_COMMENTS)
 export const canCreateContent = (role: UserRole | null) => hasPermission(role, PERMISSIONS.CREATE_POSTS)
 export const canManageUsers = (role: UserRole | null) => hasPermission(role, PERMISSIONS.MANAGE_USERS)
+
+/** 当前用户能否编辑/删除某个活动 */
+export const canEditEvent = (role: UserRole | null, userId: string | undefined, eventCreatorId: string) =>
+  hasPermission(role, PERMISSIONS.EDIT_ALL_EVENTS) ||
+  (hasPermission(role, PERMISSIONS.CREATE_EVENTS) && !!userId && userId === eventCreatorId)
 
 // 🧠 角色缓存机制
 const CACHE_DURATION = 5 * 60 * 1000 // 5分钟

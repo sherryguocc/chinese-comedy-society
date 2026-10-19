@@ -2,10 +2,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { getRoleDisplayName, isAdmin } from '@/lib/permissions'
+import { getRoleDisplayName, isAdmin, isMember, canAccessAdminArea } from '@/lib/permissions'
 
 export default function Navbar() {
-  const { user, userRole, signOut } = useAuth()
+  const { user, profile, userRole, signOut } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
@@ -28,10 +28,10 @@ export default function Navbar() {
               <li><Link href="/posts">文章 / Posts</Link></li>
               <li><Link href="/events">活动 / Events</Link></li>
               <li><Link href="/library">资料库 / Library</Link></li>
-              {['member', 'admin', 'super_admin'].includes(userRole || '') && (
+              {isMember(userRole) && (
                 <li><Link href="/files">文件 / Files</Link></li>
               )}
-              {isAdmin(userRole) && (
+              {canAccessAdminArea(userRole) && (
                 <li><Link href="/admin/dashboard">后台 / Admin</Link></li>
               )}
             </ul>
@@ -46,10 +46,10 @@ export default function Navbar() {
           <li><Link href="/posts">文章 / Posts</Link></li>
           <li><Link href="/events">活动 / Events</Link></li>
           <li><Link href="/library">资料库 / Library</Link></li>
-          {['member', 'admin', 'super_admin'].includes(userRole || '') && (
+          {isMember(userRole) && (
             <li><Link href="/files">文件 / Files</Link></li>
           )}
-          {isAdmin(userRole) && (
+          {canAccessAdminArea(userRole) && (
             <li><Link href="/admin/dashboard">后台 / Admin</Link></li>
           )}
         </ul>
@@ -58,9 +58,13 @@ export default function Navbar() {
       <div className="navbar-end w-full xl:w-auto justify-end shrink-0">
         {user ? (
           <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-              <div className="w-10 rounded-full bg-primary text-primary-content flex items-center justify-center">
-                {user.email?.charAt(0).toUpperCase()}
+            {/* daisyUI 的 .avatar > div 默认是 display:block，所以原来的 flex 居中不生效；
+                加上 placeholder 才会变成 flex 并居中 */}
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar placeholder">
+              <div className="w-10 rounded-full bg-primary text-primary-content ring-2 ring-primary/20 ring-offset-2 ring-offset-base-100">
+                <span className="text-base font-semibold leading-none select-none">
+                  {(profile?.full_name?.trim() || user.email || '?').charAt(0).toUpperCase()}
+                </span>
               </div>
             </div>
             <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">

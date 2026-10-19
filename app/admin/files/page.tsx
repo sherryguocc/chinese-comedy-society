@@ -177,7 +177,7 @@ export default function FileManagementPage() {
   }
 
   return (
-    <AdminLayout title="文件管理 File Management">
+    <AdminLayout title="文件管理 File Management" requiredPermission="UPLOAD_FILES">
       {message && (
         <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} mb-6`}>
           <span>{message.text}</span>

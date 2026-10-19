@@ -3,13 +3,15 @@
 import Link from 'next/link'
 import { ReactNode, useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { isAdmin } from '@/lib/permissions'
+import { canAccessAdminArea, hasPermission, type Permission } from '@/lib/permissions'
 import AdminNavigation from './AdminNavigation'
 import AccessDeniedPanel from './AccessDeniedPanel'
 
 interface AdminLayoutProps {
   children: ReactNode
   title?: string
+  /** 访问本页需要的权限；不传则任何能进入后台的角色（admin / event_manager）都可访问 */
+  requiredPermission?: Permission
   /** @deprecated 保留兼容旧调用，已不使用 */
   showBackButton?: boolean
 }
@@ -17,6 +19,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({
   children,
   title = '管理后台 Admin Dashboard',
+  requiredPermission,
 }: AdminLayoutProps) {
   const { userRole, loading, refreshProfile, user } = useAuth()
   const [timeoutReached, setTimeoutReached] = useState(false)
@@ -71,11 +74,11 @@ export default function AdminLayout({
     )
   }
 
-  if (!isAdmin(userRole)) {
+  if (!canAccessAdminArea(userRole) || (requiredPermission && !hasPermission(userRole, requiredPermission))) {
     return (
       <AccessDeniedPanel
-        messageZh="您需要管理员权限才能访问此页面。"
-        messageEn="You need admin access to view this page."
+        messageZh="您没有访问此页面的权限。"
+        messageEn="You don't have permission to view this page."
       />
     )
   }

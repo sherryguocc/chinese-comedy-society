@@ -16,11 +16,12 @@ type UserRow = {
   created_at: string
 }
 
-type Filter = 'guest' | 'member' | 'admin' | 'all'
+type Filter = 'guest' | 'member' | 'event_manager' | 'admin' | 'all'
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'guest', label: '待审批 Pending' },
   { key: 'member', label: '会员 Members' },
+  { key: 'event_manager', label: '活动管理员 Event Managers' },
   { key: 'admin', label: '管理员 Admins' },
   { key: 'all', label: '全部 All' },
 ]
@@ -28,6 +29,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 const ROLE_BADGE: Record<UserRole, string> = {
   guest: 'badge-ghost',
   member: 'badge-success',
+  event_manager: 'badge-warning',
   admin: 'badge-info',
   super_admin: 'badge-primary',
 }
@@ -97,11 +99,10 @@ export default function UserManagementPage() {
   }
 
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { guest: 0, member: 0, admin: 0, all: users.length }
+    const c: Record<Filter, number> = { guest: 0, member: 0, event_manager: 0, admin: 0, all: users.length }
     users.forEach(u => {
-      if (u.role === 'guest') c.guest++
-      else if (u.role === 'member') c.member++
-      else c.admin++
+      if (u.role === 'admin' || u.role === 'super_admin') c.admin++
+      else c[u.role]++
     })
     return c
   }, [users])
@@ -142,7 +143,25 @@ export default function UserManagementPage() {
             取消会员 Revoke
           </button>
         )}
-        {u.role === 'member' && canManageAdmins && (
+        {u.role === 'member' && (
+          <button
+            className="btn btn-warning btn-outline btn-sm"
+            disabled={busy}
+            onClick={() => changeRole(u, 'event_manager', `确定把 ${displayName(u)} 设为活动管理员吗？\nMake event manager?`)}
+          >
+            设为活动管理员 Make event manager
+          </button>
+        )}
+        {u.role === 'event_manager' && (
+          <button
+            className="btn btn-outline btn-sm"
+            disabled={busy}
+            onClick={() => changeRole(u, 'member', `确定撤销 ${displayName(u)} 的活动管理员身份吗？（保留会员）\nRemove event manager (keeps membership)?`)}
+          >
+            撤销活动管理员 Remove event manager
+          </button>
+        )}
+        {(u.role === 'member' || u.role === 'event_manager') && canManageAdmins && (
           <button
             className="btn btn-info btn-outline btn-sm"
             disabled={busy}
@@ -166,7 +185,7 @@ export default function UserManagementPage() {
   }
 
   return (
-    <AdminLayout title="用户管理 User Management">
+    <AdminLayout title="用户管理 User Management" requiredPermission="MANAGE_USERS">
       {message && (
         <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'} mb-6`}>
           <span>{message.text}</span>

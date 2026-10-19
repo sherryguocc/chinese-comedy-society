@@ -263,7 +263,7 @@ export default function CreatePost() {
   }
 
   return (
-    <AdminLayout title="发布文章 Create Post" showBackButton={true}>
+    <AdminLayout title="发布文章 Create Post" requiredPermission="CREATE_POSTS" showBackButton={true}>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">

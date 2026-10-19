@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { File } from '@/types/database'
 import { MemberOnly, AdminOnly } from '@/components/PermissionGuard'
+import { isMember, getRoleDisplayName } from '@/lib/permissions'
 
 export default function FilesViewPage() {
   const { user, profile, userRole } = useAuth()
@@ -13,7 +14,7 @@ export default function FilesViewPage() {
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (userRole === 'member' || userRole === 'admin' || userRole === 'super_admin') {
+    if (isMember(userRole)) {
       fetchFiles()
     }
   }, [userRole])
@@ -125,7 +126,7 @@ export default function FilesViewPage() {
         <h1 className="text-3xl font-bold">文件库 Files</h1>
         <div className="flex items-center gap-4">
           <div className="badge badge-outline">
-            {userRole === 'super_admin' ? '超级管理员' : userRole === 'admin' ? '管理员' : userRole === 'member' ? '会员' : '访客'}
+            {getRoleDisplayName(userRole || 'guest')}
           </div>
           <AdminOnly>
             <a href="/admin/files" className="btn btn-primary btn-sm">

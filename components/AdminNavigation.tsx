@@ -13,12 +13,23 @@ export default function AdminNavigation() {
   const items: NavItem[] = [
     { href: '/admin/dashboard', label: '仪表板 Dashboard', icon: '🏠', show: true },
     { href: '/admin/posts/create', label: '创建文章 New Post', icon: '📝', show: hasPermission(userRole, 'CREATE_POSTS') },
-    { href: '/admin/events/create', label: '创建活动 New Event', icon: '📅', show: hasPermission(userRole, 'CREATE_EVENTS') },
+    {
+      href: '/admin/events',
+      label: hasPermission(userRole, 'EDIT_ALL_EVENTS') ? '活动管理 Events' : '我的活动 My Events',
+      icon: '📅',
+      show: hasPermission(userRole, 'CREATE_EVENTS'),
+    },
+    { href: '/admin/events/create', label: '创建活动 New Event', icon: '➕', show: hasPermission(userRole, 'CREATE_EVENTS') },
     { href: '/admin/files', label: '文件管理 Files', icon: '📁', show: hasPermission(userRole, 'UPLOAD_FILES') },
     { href: '/admin/users', label: '用户管理 Users', icon: '👥', show: hasPermission(userRole, 'MANAGE_USERS') },
   ]
 
-  const isActive = (href: string) => pathname === href || pathname?.startsWith(href + '/')
+  const isActive = (href: string) => {
+    if (pathname === href) return true
+    // 编辑活动页归到"活动管理"下高亮
+    if (href === '/admin/events') return /^\/admin\/events\/[^/]+\/edit$/.test(pathname || '')
+    return false
+  }
 
   return (
     // 大屏：左侧固定宽度侧栏；小屏：顶部可横向滚动的菜单

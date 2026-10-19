@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
 import { getSupabaseAdmin } from '@/lib/supabase'
-import { isAdmin, isMember, isSuperAdmin } from '@/lib/permissions'
+import { isAdmin, isMember, isSuperAdmin, isEventManagerOrAbove } from '@/lib/permissions'
 import type { Profile, UserRole } from '@/types/database'
 
 export type AuthResult = {
@@ -41,10 +41,11 @@ export async function getRequestAuth(request: NextRequest): Promise<AuthResult |
   return { user, profile, role }
 }
 
-type RoleLevel = 'member' | 'admin' | 'super_admin'
+type RoleLevel = 'member' | 'event_manager' | 'admin' | 'super_admin'
 
 const roleCheck: Record<RoleLevel, (role: UserRole) => boolean> = {
   member: isMember,
+  event_manager: isEventManagerOrAbove,
   admin: isAdmin,
   super_admin: isSuperAdmin,
 }

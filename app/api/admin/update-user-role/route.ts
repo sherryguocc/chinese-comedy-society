@@ -5,11 +5,11 @@ import { isSuperAdmin } from '@/lib/permissions'
 import type { UserRole } from '@/types/database'
 
 // 规则：
-// - admin / super_admin 都可以在 guest ⇄ member 之间切换
+// - admin / super_admin 都可以在 guest ⇄ member ⇄ event_manager 之间切换
 // - 只有 super_admin 可以把人设为 admin，或修改已有 admin 的角色
 // - super_admin 不能通过 API 设置或修改（只在数据库中设置）
 // - 不能修改自己的角色
-const ASSIGNABLE_ROLES: UserRole[] = ['guest', 'member', 'admin']
+const ASSIGNABLE_ROLES: UserRole[] = ['guest', 'member', 'event_manager', 'admin']
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     if (!ASSIGNABLE_ROLES.includes(newRole)) {
       return NextResponse.json(
-        { error: 'Invalid role. Must be: guest, member, or admin' },
+        { error: 'Invalid role. Must be: guest, member, event_manager, or admin' },
         { status: 400 }
       )
     }

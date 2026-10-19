@@ -1,5 +1,5 @@
 // 角色类型 - profiles.role 是角色的唯一来源（super_admin 也存在数据库中）
-export type ProfileRole = 'guest' | 'member' | 'admin' | 'super_admin'
+export type ProfileRole = 'guest' | 'member' | 'event_manager' | 'admin' | 'super_admin'
 // Admin 相关类型
 export type AdminPermissions = {
   manage_users?: boolean
