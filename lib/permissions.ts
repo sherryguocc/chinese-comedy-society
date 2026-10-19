@@ -14,7 +14,8 @@ export const PERMISSIONS = {
   VIEW_CONTENT: 'VIEW_CONTENT',
   DOWNLOAD_FILES: 'DOWNLOAD_FILES',
   CREATE_COMMENTS: 'CREATE_COMMENTS',
-  CREATE_POSTS: 'CREATE_POSTS',
+  CREATE_POSTS: 'CREATE_POSTS',         // 发布文章 + 编辑/删除自己的文章
+  EDIT_ALL_POSTS: 'EDIT_ALL_POSTS',     // 编辑/删除任何人的文章（仅超级管理员）
   CREATE_EVENTS: 'CREATE_EVENTS',       // 发布活动 + 编辑/删除自己发布的活动
   EDIT_ALL_EVENTS: 'EDIT_ALL_EVENTS',   // 编辑/删除任何人发布的活动
   UPLOAD_FILES: 'UPLOAD_FILES',
@@ -45,7 +46,7 @@ const rolePermissions: Record<UserRole, Permission[]> = {
   member: MEMBER_PERMS,
   event_manager: EVENT_MANAGER_PERMS,
   admin: ADMIN_PERMS,
-  super_admin: [...ADMIN_PERMS, PERMISSIONS.MANAGE_ADMINS, PERMISSIONS.SYSTEM_SETTINGS],
+  super_admin: [...ADMIN_PERMS, PERMISSIONS.EDIT_ALL_POSTS, PERMISSIONS.MANAGE_ADMINS, PERMISSIONS.SYSTEM_SETTINGS],
 }
 
 // 权限判断函数
@@ -81,6 +82,11 @@ export const canDownload = (role: UserRole | null) => hasPermission(role, PERMIS
 export const canComment = (role: UserRole | null) => hasPermission(role, PERMISSIONS.CREATE_COMMENTS)
 export const canCreateContent = (role: UserRole | null) => hasPermission(role, PERMISSIONS.CREATE_POSTS)
 export const canManageUsers = (role: UserRole | null) => hasPermission(role, PERMISSIONS.MANAGE_USERS)
+
+/** 当前用户能否编辑/删除某篇文章 */
+export const canEditPost = (role: UserRole | null, userId: string | undefined, authorId: string) =>
+  hasPermission(role, PERMISSIONS.EDIT_ALL_POSTS) ||
+  (hasPermission(role, PERMISSIONS.CREATE_POSTS) && !!userId && userId === authorId)
 
 /** 当前用户能否编辑/删除某个活动 */
 export const canEditEvent = (role: UserRole | null, userId: string | undefined, eventCreatorId: string) =>

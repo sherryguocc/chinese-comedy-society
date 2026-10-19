@@ -18,7 +18,13 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   const cards = [
-    { href: '/admin/posts/create', icon: '📝', title: '创建文章 New Post', desc: '发布新的文章内容', show: hasPermission(userRole, 'CREATE_POSTS') },
+    {
+      href: '/admin/posts',
+      icon: '📝',
+      title: '文章管理 Posts',
+      desc: hasPermission(userRole, 'EDIT_ALL_POSTS') ? '发布、编辑和删除所有文章' : '发布文章，编辑和删除自己的文章',
+      show: hasPermission(userRole, 'CREATE_POSTS'),
+    },
     {
       href: '/admin/events',
       icon: '📅',

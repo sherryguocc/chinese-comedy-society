@@ -1,9 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { canComment, getRoleDisplayName } from '@/lib/permissions'
+import { canComment, canEditPost, getRoleDisplayName } from '@/lib/permissions'
+import { formatNzDate } from '@/lib/datetime'
+import SafeHtmlRenderer from '@/components/SafeHtmlRenderer'
 import { Post, Comment } from '@/types/database'
 
 export default function PostDetailPage() {
@@ -123,16 +126,20 @@ export default function PostDetailPage() {
       {/* 文章内容 */}
       <article className="card bg-base-100 shadow-xl mb-8">
         <div className="card-body">
-          <h1 className="card-title text-3xl mb-4">{post.title}</h1>
+          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+            <h1 className="card-title text-3xl">{post.title}</h1>
+            {canEditPost(userRole, user?.id, post.author_id) && (
+              <Link href={`/admin/posts/${post.id}/edit`} className="btn btn-outline btn-sm">
+                编辑 Edit
+              </Link>
+            )}
+          </div>
           <div className="text-sm text-base-content/60 mb-6">
-            作者 / Author: {post.author?.full_name} | 
-            发布时间 / Published: {new Date(post.created_at).toLocaleDateString()}
+            作者 / Author: {post.author?.full_name || post.author?.username || '—'} |
+            发布时间 / Published: {formatNzDate(post.created_at)}
           </div>
-          <div className="prose max-w-none">
-            {post.content.split('\n').map((paragraph, index) => (
-              <p key={index} className="mb-4">{paragraph}</p>
-            ))}
-          </div>
+          {/* 文章内容是富文本 HTML，经 DOMPurify 清理后渲染 */}
+          <SafeHtmlRenderer htmlContent={post.content} />
         </div>
       </article>
 

@@ -12,7 +12,8 @@ export default function AdminNavigation() {
 
   const items: NavItem[] = [
     { href: '/admin/dashboard', label: '仪表板 Dashboard', icon: '🏠', show: true },
-    { href: '/admin/posts/create', label: '创建文章 New Post', icon: '📝', show: hasPermission(userRole, 'CREATE_POSTS') },
+    { href: '/admin/posts', label: '文章管理 Posts', icon: '📝', show: hasPermission(userRole, 'CREATE_POSTS') },
+    { href: '/admin/posts/create', label: '发布文章 New Post', icon: '✏️', show: hasPermission(userRole, 'CREATE_POSTS') },
     {
       href: '/admin/events',
       label: hasPermission(userRole, 'EDIT_ALL_EVENTS') ? '活动管理 Events' : '我的活动 My Events',
@@ -26,8 +27,9 @@ export default function AdminNavigation() {
 
   const isActive = (href: string) => {
     if (pathname === href) return true
-    // 编辑活动页归到"活动管理"下高亮
+    // 编辑页归到对应的管理页下高亮
     if (href === '/admin/events') return /^\/admin\/events\/[^/]+\/edit$/.test(pathname || '')
+    if (href === '/admin/posts') return /^\/admin\/posts\/[^/]+\/edit$/.test(pathname || '')
     return false
   }
 
