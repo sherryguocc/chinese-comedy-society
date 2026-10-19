@@ -85,7 +85,12 @@ export const canManageUsers = (role: UserRole | null) => hasPermission(role, PER
 const CACHE_DURATION = 5 * 60 * 1000 // 5分钟
 let roleCache: Record<string, { data: UserRoleData; timestamp: number }> = {}
 
-export async function getUserRole(_userId?: string, forceRefresh = false): Promise<UserRoleData> {
+/**
+ * 获取当前用户角色。
+ * 在 onAuthStateChange 回调里调用时必须传入 accessToken：
+ * 回调内再调用 supabase.auth.getSession() 会因为 auth 锁而死锁（永远不返回）。
+ */
+export async function getUserRole(accessTokenArg?: string, forceRefresh = false): Promise<UserRoleData> {
   const cacheKey = 'user_role_current_user'
 
   if (!forceRefresh && roleCache[cacheKey] && Date.now() - roleCache[cacheKey].timestamp < CACHE_DURATION) {
@@ -96,8 +101,8 @@ export async function getUserRole(_userId?: string, forceRefresh = false): Promi
   try {
     console.log('🌐 [getUserRole] Fetching role from API for current user')
 
-    const { data: { session } } = await supabase.auth.getSession()
-    const accessToken = session?.access_token
+    const accessToken = accessTokenArg
+      ?? (await supabase.auth.getSession()).data.session?.access_token
 
     const response = await fetch('/api/auth/user-role', {
       method: 'GET',
@@ -109,7 +114,8 @@ export async function getUserRole(_userId?: string, forceRefresh = false): Promi
     })
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`)
+      const body = await response.text().catch(() => '')
+      throw new Error(`/api/auth/user-role returned ${response.status}: ${body}`)
     }
 
     const result = (await response.json()) as UserRoleData

@@ -46,6 +46,11 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminOnly
+      loadingFallback={
+        <div className="flex justify-center items-center min-h-64 py-16">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      }
       fallback={
         <AccessDeniedPanel
           messageZh="您需要管理员权限才能访问此页面。"

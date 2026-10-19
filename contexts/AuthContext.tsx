@@ -261,7 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user) {
           // 简化：总是获取用户数据，让 getUserRole 内部处理缓存
-          await fetchUserData(session.user.id, false);
+          await fetchUserData(session.user.id, false, session.access_token);
         } else {
           setProfile(null);
           setAdmin(null);
@@ -412,8 +412,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           previousUserId: user?.id
         });
         
-        // 用户变化时强制刷新，否则使用缓存
-        await fetchUserData(currentUserId, hasUserChanged);
+        // 用户变化时强制刷新，否则使用缓存。
+        // 用 setTimeout 跳出回调：在 onAuthStateChange 里 await 其他 supabase 调用会死锁，
+        // 导致 loading 永远是 true（这就是"导航栏显示后台、页面却说没权限"的原因）。
+        const accessToken = session.access_token;
+        setTimeout(() => {
+          if (mounted) fetchUserData(currentUserId, hasUserChanged, accessToken);
+        }, 0);
       } else {
         setProfile(null);
         setAdmin(null);
@@ -454,7 +459,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []); // 移除 user 依赖，避免无限循环
 
-  const fetchUserData = async (userId: string, forceRefresh: boolean = false) => {
+  const fetchUserData = async (userId: string, forceRefresh: boolean = false, accessToken?: string) => {
     try {
       console.log('🎯 [AuthContext] fetchUserData called with:', { userId, forceRefresh });
       
@@ -466,7 +471,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // 使用新的getUserRole函数来获取用户数据
       console.log('🚀 [AuthContext] Calling getUserRole with userId:', userId, 'forceRefresh:', forceRefresh);
-      const { userRole: role, profileData, adminData } = await getUserRole(userId, forceRefresh);
+      const { userRole: role, profileData, adminData } = await getUserRole(accessToken, forceRefresh);
       
       console.log('✅ [AuthContext] getUserRole completed! Result:', {
         role,
