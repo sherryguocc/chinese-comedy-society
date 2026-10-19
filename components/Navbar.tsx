@@ -2,20 +2,20 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { getRoleDisplayName, isAdmin, isSuperAdmin } from '@/lib/permissions'
+import { getRoleDisplayName, isAdmin } from '@/lib/permissions'
 
 export default function Navbar() {
   const { user, userRole, signOut } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <div className="navbar bg-base-100 shadow-lg flex-wrap lg:flex-nowrap items-start lg:items-center gap-y-2">
-      <div className="navbar-start w-full lg:w-auto">
+    <div className="navbar bg-base-100 shadow-lg flex-wrap xl:flex-nowrap items-start xl:items-center gap-y-2">
+      <div className="navbar-start w-full xl:w-auto">
         <div className="dropdown">
           <div 
             tabIndex={0} 
             role="button" 
-            className="btn btn-ghost lg:hidden"
+            className="btn btn-ghost xl:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
@@ -37,11 +37,11 @@ export default function Navbar() {
             </ul>
           )}
         </div>
-        <Link href="/" className="btn btn-ghost text-sm sm:text-base lg:text-xl px-2 sm:px-3 leading-tight whitespace-normal">Chinese Comedy Society</Link>
+        <Link href="/" className="btn btn-ghost text-sm sm:text-base xl:text-xl px-2 sm:px-3 leading-tight whitespace-normal">Chinese Comedy Society</Link>
       </div>
       
-      <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1">
+      <div className="navbar-center hidden xl:flex">
+        <ul className="menu menu-horizontal px-1 flex-nowrap whitespace-nowrap">
           <li><Link href="/">首页 / Home</Link></li>
           <li><Link href="/posts">文章 / Posts</Link></li>
           <li><Link href="/events">活动 / Events</Link></li>
@@ -55,7 +55,7 @@ export default function Navbar() {
         </ul>
       </div>
       
-      <div className="navbar-end w-full lg:w-auto justify-end">
+      <div className="navbar-end w-full xl:w-auto justify-end shrink-0">
         {user ? (
           <div className="dropdown dropdown-end">
             <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
@@ -74,7 +74,7 @@ export default function Navbar() {
               </li>
               <li><hr/></li>
               <li><Link href="/profile">设置 / Profile</Link></li>
-              {isSuperAdmin(userRole) && (
+              {isAdmin(userRole) && (
                 <li><Link href="/admin/users">用户 / Users</Link></li>
               )}
               <li><button onClick={signOut}>登出 / Logout</button></li>
@@ -82,8 +82,8 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="flex w-full justify-end gap-2">
-            <Link href="/auth/login" className="btn btn-ghost btn-sm text-xs sm:text-sm">登录 / Login</Link>
-            <Link href="/auth/register" className="btn btn-primary btn-sm text-xs sm:text-sm">注册 / Register</Link>
+            <Link href="/auth/login" className="btn btn-ghost btn-sm text-xs sm:text-sm whitespace-nowrap">登录<span className="hidden sm:inline">&nbsp;/ Login</span></Link>
+            <Link href="/auth/register" className="btn btn-primary btn-sm text-xs sm:text-sm whitespace-nowrap">注册<span className="hidden sm:inline">&nbsp;/ Register</span></Link>
           </div>
         )}
       </div>

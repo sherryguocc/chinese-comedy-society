@@ -39,6 +39,7 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     PERMISSIONS.CREATE_POSTS,
     PERMISSIONS.CREATE_EVENTS,
     PERMISSIONS.UPLOAD_FILES,
+    PERMISSIONS.MANAGE_USERS, // admin 可在 guest ⇄ member 之间切换；任免 admin 需要 MANAGE_ADMINS
   ],
   super_admin: [
     PERMISSIONS.VIEW_CONTENT,
