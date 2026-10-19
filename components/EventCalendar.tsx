@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { Event, EventType } from '@/types/database'
+import { nzDateKey } from '@/lib/datetime'
 
 interface EventCalendarProps {
   events: Event[]
@@ -59,33 +60,9 @@ export default function EventCalendar({ events, onDateClick, selectedDate }: Eve
   const eventsByDate = useMemo(() => {
     const grouped: Record<string, Event[]> = {}
     
-    // 将数据库时间字符串作为本地时间处理
-    const parseAsLocalTime = (timeStr: string) => {
-      // 移除时区信息 (+00, Z, 等)
-      let cleanTimeStr = timeStr.replace(/[\+\-]\d{2}:?\d{2}$/, '').replace(/Z$/, '')
-      
-      // 确保格式为 YYYY-MM-DDTHH:mm:ss
-      if (cleanTimeStr.includes(' ')) {
-        cleanTimeStr = cleanTimeStr.replace(' ', 'T')
-      }
-      
-      // 添加秒如果缺失
-      if (!cleanTimeStr.includes(':') || cleanTimeStr.split(':').length < 3) {
-        if (cleanTimeStr.split(':').length === 2) {
-          cleanTimeStr += ':00'
-        }
-      }
-      
-      return new Date(cleanTimeStr)
-    }
-    
     events.forEach(event => {
-      const eventDate = parseAsLocalTime(event.start_time)
-      // 使用本地时间生成日期键
-      const year = eventDate.getFullYear()
-      const month = String(eventDate.getMonth() + 1).padStart(2, '0')
-      const day = String(eventDate.getDate()).padStart(2, '0')
-      const dateKey = `${year}-${month}-${day}`
+      // 按活动在新西兰的日期分组（与浏览器所在时区无关）
+      const dateKey = nzDateKey(event.start_time)
       
       if (!grouped[dateKey]) {
         grouped[dateKey] = []

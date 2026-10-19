@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { EventType } from '@/types/database'
 import { isAdmin } from '@/lib/permissions'
 import AdminLayout from '@/components/AdminLayout'
+import { nzLocalToISO, formatNzDateTime, formatNzTime } from '@/lib/datetime'
 import AccessDeniedPanel from '@/components/AccessDeniedPanel'
 import { getSafeExternalUrl } from '@/lib/utils'
 
@@ -72,8 +73,9 @@ export default function CreateEvent() {
       const eventData = {
         title: formData.title,
         description: formData.description,
-        start_time: formData.start_time,
-        end_time: formData.end_time || null,
+        // datetime-local 的值是新西兰墙上时间，需转成带时区的时刻再存
+        start_time: nzLocalToISO(formData.start_time),
+        end_time: formData.end_time ? nzLocalToISO(formData.end_time) : null,
         location: formData.location,
         link: formData.link.trim() || null,
         event_type: formData.event_type,
@@ -376,10 +378,11 @@ export default function CreateEvent() {
                 
                 {formData.start_time && (
                   <p className="text-sm text-gray-500 mb-1">
-                    ⏰ {new Date(formData.start_time).toLocaleString('zh-CN')}
+                    ⏰ {formatNzDateTime(nzLocalToISO(formData.start_time))}
                     {formData.end_time && (
-                      ` - ${new Date(formData.end_time).toLocaleString('zh-CN')}`
+                      ` - ${formatNzTime(nzLocalToISO(formData.end_time))}`
                     )}
+                    {' '}(NZ)
                   </p>
                 )}
                 

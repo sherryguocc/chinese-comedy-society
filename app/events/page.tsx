@@ -1,5 +1,6 @@
 'use client'
 
+import { formatNzDateTime, formatNzTime, nzDateKey } from '@/lib/datetime'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Event, EventType } from '@/types/database'
@@ -60,31 +61,14 @@ export default function EventsPage() {
     setSelectedEvents(dayEvents)
   }
 
+  // 一律按新西兰时间显示；跨天的活动结束时间也显示日期
   const formatEventTime = (startTime: string, endTime?: string) => {
-    const timezone = 'Pacific/Auckland'
-    const start = new Date(startTime)
-
-    const startStr = new Intl.DateTimeFormat('en-NZ', {
-      timeZone: timezone,
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    }).format(start)
-
-    if (endTime) {
-      const end = new Date(endTime)
-      const endStr = new Intl.DateTimeFormat('en-NZ', {
-        timeZone: timezone,
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      }).format(end)
-      return `${startStr} - ${endStr}`
-    }
-
-    return startStr
+    const startStr = formatNzDateTime(startTime)
+    if (!endTime) return startStr
+    const endStr = nzDateKey(endTime) === nzDateKey(startTime)
+      ? formatNzTime(endTime)
+      : formatNzDateTime(endTime)
+    return `${startStr} - ${endStr}`
   }
 
   const isUpcoming = (startTime: string) => {
@@ -92,8 +76,8 @@ export default function EventsPage() {
   }
 
   const formatSelectedDate = (date: Date) => {
+    // date 是日历格子对应的日期，不需要时区换算
     return new Intl.DateTimeFormat('zh-CN', {
-      timeZone: 'Pacific/Auckland',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
