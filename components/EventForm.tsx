@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { EventType } from '@/types/database'
 import { nzLocalToISO, formatNzDateTime, formatNzTime } from '@/lib/datetime'
 import { getSafeExternalUrl } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 export const EVENT_TYPE_OPTIONS: { value: EventType; label: string; icon: string; description: string }[] = [
   { value: 'show', label: '演出', icon: '🎭', description: '正式的喜剧演出活动' },
@@ -38,6 +39,9 @@ export type EventPayload = {
   organiser: string
 }
 
+const DEFAULT_ORGANISER = '华人喜剧协会CCS'
+const NEW_ORGANISER = '__new__'
+
 export const EMPTY_EVENT_FORM: EventFormValues = {
   title: '',
   description: '',
@@ -46,7 +50,7 @@ export const EMPTY_EVENT_FORM: EventFormValues = {
   location: '',
   link: '',
   event_type: 'meetup',
-  organiser: '华人喜剧协会CCS',
+  organiser: DEFAULT_ORGANISER,
 }
 
 interface EventFormProps {
@@ -61,6 +65,30 @@ export default function EventForm({ initialValues = EMPTY_EVENT_FORM, submitLabe
   const [formData, setFormData] = useState<EventFormValues>(initialValues)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 组织者下拉：来自历史活动（按使用次数排序），也可以填写新的
+  const [organisers, setOrganisers] = useState<string[]>(() =>
+    Array.from(new Set([DEFAULT_ORGANISER, ...(initialValues.organiser?.trim() ? [initialValues.organiser.trim()] : [])]))
+  )
+  const [customOrganiser, setCustomOrganiser] = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from('events').select('organiser')
+      const counts = new Map<string, number>()
+      ;(data as { organiser: string | null }[] | null)?.forEach(({ organiser }) => {
+        const name = organiser?.trim()
+        if (name) counts.set(name, (counts.get(name) || 0) + 1)
+      })
+      const list = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([name]) => name)
+      // 默认组织者和当前值（编辑旧活动时）始终在列表里
+      const current = initialValues.organiser?.trim()
+      setOrganisers(Array.from(new Set([DEFAULT_ORGANISER, ...list, ...(current ? [current] : [])])))
+    }
+    load()
+  }, [initialValues.organiser])
 
   const linkUrl = getSafeExternalUrl(formData.link)
   const typeOption = EVENT_TYPE_OPTIONS.find(o => o.value === formData.event_type)
@@ -85,7 +113,7 @@ export default function EventForm({ initialValues = EMPTY_EVENT_FORM, submitLabe
         location: formData.location,
         link: formData.link.trim() || null,
         event_type: formData.event_type,
-        organiser: formData.organiser,
+        organiser: formData.organiser.trim(),
       })
     } catch (err: any) {
       setError(err?.message || '保存失败 Save failed')
@@ -215,13 +243,51 @@ export default function EventForm({ initialValues = EMPTY_EVENT_FORM, submitLabe
               <label className="label">
                 <span className="label-text text-lg font-semibold">活动组织者 Organiser</span>
               </label>
-              <input
-                type="text"
-                value={formData.organiser}
-                onChange={e => set('organiser', e.target.value)}
-                className="input input-bordered w-full"
-                placeholder="请输入组织者名称 Enter organiser name..."
-              />
+              {customOrganiser ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.organiser}
+                    onChange={e => set('organiser', e.target.value)}
+                    className="input input-bordered w-full"
+                    placeholder="输入新的组织者名称 New organiser name"
+                    autoFocus
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    title="从列表选择 Choose from list"
+                    onClick={() => {
+                      setCustomOrganiser(false)
+                      set('organiser', organisers[0] || DEFAULT_ORGANISER)
+                    }}
+                  >
+                    ↩
+                  </button>
+                </div>
+              ) : (
+                <select
+                  className="select select-bordered w-full"
+                  value={formData.organiser}
+                  onChange={e => {
+                    if (e.target.value === NEW_ORGANISER) {
+                      setCustomOrganiser(true)
+                      set('organiser', '')
+                    } else {
+                      set('organiser', e.target.value)
+                    }
+                  }}
+                >
+                  {organisers.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                  <option value={NEW_ORGANISER}>➕ 新的组织者… New organiser…</option>
+                </select>
+              )}
+              <span className="label-text-alt mt-1 text-base-content/60">
+                新填写的组织者保存后，下次会出现在列表里
+              </span>
             </div>
           </div>
 
